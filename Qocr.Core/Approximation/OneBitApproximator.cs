@@ -17,8 +17,7 @@ namespace Qocr.Core.Approximation
             return
                 new Monomap(ConvertTo1Bit(image));
         }
-
-
+        
         public static Bitmap ConvertTo1Bit(Bitmap input)
         {
             var masks = new byte[] { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };

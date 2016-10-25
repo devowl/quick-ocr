@@ -45,10 +45,17 @@
     <Compile Include="Approximation\MyApproximator.cs" />
     <Compile Include="Approximation\OneBitApproximator.cs" />
     <Compile Include="Data\BitMonomap.cs" />
+    <Compile Include="Data\EulerMonomap.cs" />
+    <Compile Include="Data\Square2D.cs" />
     <Compile Include="Interfaces\IApproximator.cs" />
+    <Compile Include="Interfaces\IElulerSquare.cs" />
+    <Compile Include="Interfaces\I2DotsEulerSquareCollection.cs" />
     <Compile Include="Interfaces\IMonomap.cs" />
     <Compile Include="Data\Monomap.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Recognition\EulerCharacteristicComputer.cs" />
+    <Compile Include="Recognition\TextRecognizer.cs" />
+    <Compile Include="Utils\ClassUtils.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

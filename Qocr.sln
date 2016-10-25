@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Qocr.Core", "Qocr.Core.csproj", "{BDC9F16C-2767-4E16-BD5D-25FEB4BD4036}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Qocr.Core", "Qocr.Core\Qocr.Core.csproj", "{BDC9F16C-2767-4E16-BD5D-25FEB4BD4036}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Qocr.Tester", "..\Qocr.Tester\Qocr.Tester.csproj", "{D9E69067-F246-431C-A133-A72C4C18A4DD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Qocr.Tester", "Qocr.Tester\Qocr.Tester.csproj", "{D9E69067-F246-431C-A133-A72C4C18A4DD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
