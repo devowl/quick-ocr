@@ -1,14 +1,15 @@
 ﻿using System;
+using System.Linq;
 
 using Qocr.Core.Interfaces;
 using Qocr.Core.Utils;
 
-namespace Qocr.Core.Data
+namespace Qocr.Core.Data.Map2D
 {
     /// <summary>
-    /// Реализация <see cref="IElulerSquare"/>.
+    /// Реализация <see cref="IEulerSquare"/>.
     /// </summary>
-    internal class Square2D : IElulerSquare
+    internal class Square2D : IEulerSquare
     {
         private const string PropertyPrefix = "X";
 
@@ -24,6 +25,7 @@ namespace Qocr.Core.Data
                 throw new ArgumentException(nameof(dots));
             }
 
+            SquareIdent = string.Concat(dots.Select(item => item ? 1 : 0));
             ClassUtils.FillClassProperiesValues(this, PropertyPrefix, dots);
         }
 
@@ -63,5 +65,8 @@ namespace Qocr.Core.Data
                 monomap[topX + 1, topY + 1] == X3 &&
                 monomap[topX    , topY + 1] == X4;
         }
+
+        /// <inheritdoc/>
+        public string SquareIdent { get; }
     }
 }

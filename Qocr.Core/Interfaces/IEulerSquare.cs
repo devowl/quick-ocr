@@ -3,7 +3,7 @@
     /// <summary>
     /// Значение Эйлерового квадрата.
     /// </summary>
-    internal interface IElulerSquare
+    public interface  IEulerSquare
     {
         /// <summary>
         /// Признак того, что в данном участке изображения находится текущий Эйлеровый фрагмент.
@@ -13,5 +13,10 @@
         /// <param name="monomap"></param>
         /// <returns></returns>
         bool IsSquareDetected(int topX, int topY, IMonomap monomap);
+
+        /// <summary>
+        /// Идентификатор фрагмента изоражения.
+        /// </summary>
+        string SquareIdent { get; }
     }
 }

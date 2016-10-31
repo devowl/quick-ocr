@@ -9,7 +9,6 @@ namespace Qocr.Core.Recognition
 {
     public class TextRecognizer
     {
-        
         public TextRecognizer()
             : this(new OneBitApproximator())
         {
@@ -23,7 +22,7 @@ namespace Qocr.Core.Recognition
 
         public StringBuilder Recognize(IMonomap monomap)
         {
-            
+            throw new NotImplementedException();
         }
     }
 }
