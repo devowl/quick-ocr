@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Xml.Serialization;
 
 using Qocr.Core.Data.Map2D;
@@ -11,17 +13,23 @@ namespace Qocr.Core.Data.Serialization
     /// </summary>
     public class Symbol
     {
-        private List<EulerMonomap2D> _normalCodes;
+        private const string Seporator = ";";
 
-        private List<EulerMonomap2D> _boldCodes;
-
-        private List<EulerMonomap2D> _italicCodes;
+        /// <summary>
+        /// Создание экземпляра класса <see cref="Symbol"/>.
+        /// </summary>
+        public Symbol()
+        {
+            CodesItalic = new HashSet<EulerMonomap2D>();
+            CodesBold = new HashSet<EulerMonomap2D>();
+            CodesNormal = new HashSet<EulerMonomap2D>();
+        }
 
         /// <summary>
         /// Код символа.
         /// </summary>
         public char Chr { get; set; }
-        
+
         /// <summary>
         /// Строка из кодов для жирного шрифта.
         /// </summary>
@@ -41,23 +49,53 @@ namespace Qocr.Core.Data.Serialization
         /// Список эйлеровых характеристик для жирного шрифта.
         /// </summary>
         [XmlIgnore]
-        public List<EulerMonomap2D> CodesBold => _boldCodes ?? (_boldCodes = GetData(StringsCodesBold));
+        public HashSet<EulerMonomap2D> CodesBold { get; private set; }
 
         /// <summary>
         /// Список эйлеровых характеристик для обычного шрифта.
         /// </summary>
         [XmlIgnore]
-        public List<EulerMonomap2D> CodesNormal => _normalCodes ?? (_normalCodes = GetData(StringsCodesNormal));
+        public HashSet<EulerMonomap2D> CodesNormal { get; private set; }
 
         /// <summary>
         /// Список эйлеровых характеристик для курсивного шрифта.
         /// </summary>
         [XmlIgnore]
-        public List<EulerMonomap2D> CodesItalic => _italicCodes ?? (_italicCodes = GetData(StringsCodesItalic));
+        public HashSet<EulerMonomap2D> CodesItalic { get; private set; }
 
-        private static List<EulerMonomap2D> GetData(string sourceString)
+        [OnSerializing]
+        internal void OnSerializingMethod(StreamingContext context)
         {
-            return sourceString.Split(';').Select(str => new EulerMonomap2D(str)).ToList();
+            StringsCodesBold = string.Join(Seporator, CodesBold);
+            StringsCodesItalic = string.Join(Seporator, CodesItalic);
+            StringsCodesNormal = string.Join(Seporator, CodesNormal);
+        }
+
+        [OnDeserialized]
+        internal void OnDeserializedMethod(StreamingContext context)
+        {
+            CodesItalic = GetData(StringsCodesItalic);
+            CodesNormal = GetData(StringsCodesNormal);
+            CodesBold = GetData(StringsCodesBold);
+        }
+
+        private static HashSet<EulerMonomap2D> GetData(string sourceString)
+        {
+            var splitter = new[]
+            {
+                Seporator
+            };
+
+            var result = new HashSet<EulerMonomap2D>();
+            foreach (
+                var eulerMonomap2D in
+                    (sourceString ?? string.Empty).Split(splitter, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(str => new EulerMonomap2D(str)))
+            {
+                result.Add(eulerMonomap2D);
+            }
+
+            return result;
         }
     }
 }

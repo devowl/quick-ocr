@@ -7,6 +7,12 @@ namespace Qocr.Core.Data.Serialization
     /// </summary>
     public class Language
     {
+        public Language()
+        {
+            LowcaseCharactors = new List<Symbol>();
+            UppercaseCharactors = new List<Symbol>();
+        }
+
         /// <summary>
         /// Список символов нижнего регистра.
         /// </summary>

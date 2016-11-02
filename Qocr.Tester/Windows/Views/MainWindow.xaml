@@ -20,33 +20,43 @@
     <Window.InputBindings>
         <KeyBinding Key="V" Modifiers="Control" Command="{Binding ImagePastCommand}" />
     </Window.InputBindings>
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition />
-            <ColumnDefinition Width="5" />
-            <ColumnDefinition />
-        </Grid.ColumnDefinitions>
-        <DockPanel>
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition />
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition />
-                    <ColumnDefinition />
-                </Grid.ColumnDefinitions>
-                <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal">
-                    <TextBlock Text="Source image (or use Ctrl+V):" />
-                    <Button Content="Open" Command="{Binding OpenSourceImageCommand}" />
-                </StackPanel>
-                <Image Grid.Row="1" Grid.ColumnSpan="2" Source="{Binding SourceImage}" VerticalAlignment="Stretch" />
-            </Grid>
-        </DockPanel>
-        <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
-        <DockPanel Grid.Column="2">
-            <TextBlock Text="Approximated Image" DockPanel.Dock="Top" />
-            <Image Source="{Binding ApproximatedImage}"/>
-        </DockPanel>
-    </Grid>
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+            <Button Content="Gen" Command="{Binding GenCommand}" />
+            <Label Content="FileName: Gen.bin" />
+            <TextBlock>Шрифт:<Run Text="{Binding CurrentFont.FontFamily.Name, Mode=OneWay}" /></TextBlock>
+            <TextBlock>Размер:<Run Text="{Binding CurrentFont.Size, Mode=OneWay}" /></TextBlock>
+            <TextBlock>Стиль:<Run Text="{Binding CurrentFont.Style, Mode=OneWay}" /></TextBlock>
+        </StackPanel>
+        <Image DockPanel.Dock="Top" Source="{Binding CurrentGenImage}" SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="HighQuality" />
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <DockPanel>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal">
+                        <TextBlock Text="Source image (or use Ctrl+V):" />
+                        <Button Content="Open" Command="{Binding OpenSourceImageCommand}" />
+                    </StackPanel>
+                    <Image Grid.Row="1" Grid.ColumnSpan="2" Source="{Binding SourceImage}" VerticalAlignment="Stretch" />
+                </Grid>
+            </DockPanel>
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
+            <DockPanel Grid.Column="2">
+                <TextBlock Text="Approximated Image" DockPanel.Dock="Top" />
+                <Image Source="{Binding ApproximatedImage}"/>
+            </DockPanel>
+        </Grid>
+    </DockPanel>
 </Window>

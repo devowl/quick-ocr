@@ -33,6 +33,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -42,12 +43,15 @@
   <ItemGroup>
     <Compile Include="Approximation\BrightnessBaseApproximator.cs" />
     <Compile Include="Approximation\FastApproximator.cs" />
+    <Compile Include="Approximation\MostPopularColorApproximator.cs" />
     <Compile Include="Approximation\MyApproximator.cs" />
     <Compile Include="Approximation\OneBitApproximator.cs" />
     <Compile Include="Data\Attributes\EulerPathAttribute.cs" />
     <Compile Include="Data\BitMonomap.cs" />
     <Compile Include="Data\Map2D\EulerMonomap2D.cs" />
     <Compile Include="Data\Map2D\Square2D.cs" />
+    <Compile Include="Data\Serialization\CompressionUtils.cs" />
+    <Compile Include="Data\Serialization\EulerContainer.cs" />
     <Compile Include="Data\Serialization\Language.cs" />
     <Compile Include="Data\Serialization\SpecialChars.cs" />
     <Compile Include="Data\Serialization\Symbol.cs" />

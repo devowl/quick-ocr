@@ -23,6 +23,8 @@ namespace Qocr.Core.Utils
             {
                 var value = values[i];
                 var property = type.GetProperty($"{prefix}{i}");
+
+                var t = type.GetProperties();
                 property.SetValue(instance, value, null);
             }
         }

@@ -7,7 +7,10 @@ using Qocr.Core.Interfaces;
 
 namespace Qocr.Core.Recognition
 {
-    public class TextRecognizer
+    /// <summary>
+    /// Распознаватель текста.
+    /// </summary>
+    public class TextRecognizer : IDisposable
     {
         public TextRecognizer()
             : this(new OneBitApproximator())
@@ -23,6 +26,12 @@ namespace Qocr.Core.Recognition
         public StringBuilder Recognize(IMonomap monomap)
         {
             throw new NotImplementedException();
+        }
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            
         }
     }
 }

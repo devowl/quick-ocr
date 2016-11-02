@@ -64,6 +64,8 @@
     <Compile Include="ImageTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="BitMonomapTests.cs" />
+    <Compile Include="CompressionTests.cs" />
+    <Compile Include="SerializationTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Qocr.Core\Qocr.Core.csproj">
@@ -79,6 +81,12 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Images\taxi.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\malevich.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Images\inverted_malevich.png" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

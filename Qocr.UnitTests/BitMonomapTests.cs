@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Qocr.Core.Data;
 using Qocr.Core.Interfaces;
+using Qocr.Core.Recognition;
 
 namespace Qocr.UnitTests
 {
@@ -12,7 +13,7 @@ namespace Qocr.UnitTests
         private readonly bool[,] _bitImage = new bool[3, 2]
         {
             // { false, true, false },
-            // { true, false, false }
+            // { true, false, true }
 
             { false, true },
             { true, false },
@@ -39,6 +40,32 @@ namespace Qocr.UnitTests
             IMonomap monomap = new BitMonomap(_bitImage);
             Assert.AreEqual(monomap.Width, 3);
             Assert.AreEqual(monomap.Height, 2);
+        }
+
+        [TestMethod]
+        public void MalevichEuler()
+        {
+            IMonomap monomap = new BitMonomap(_bitImage);
+            var euler = EulerCharacteristicComputer.Compute2D(monomap);
+            Assert.AreEqual(euler.S0, 0);
+            Assert.AreEqual(euler.S1, 0);
+            Assert.AreEqual(euler.S2, 0);
+            Assert.AreEqual(euler.S3, 0);
+
+            Assert.AreEqual(euler.S4, 0);
+            Assert.AreEqual(euler.S5, 0);
+            Assert.AreEqual(euler.S6, 0);
+            Assert.AreEqual(euler.S7, 0);
+
+            Assert.AreEqual(euler.S8, 1);
+            Assert.AreEqual(euler.S9, 1);
+
+            Assert.AreEqual(euler.S10, 0);
+            Assert.AreEqual(euler.S11, 0);
+            Assert.AreEqual(euler.S12, 0);
+            Assert.AreEqual(euler.S13, 0);
+
+            Assert.AreEqual(euler.S14, 0);
         }
     }
 }

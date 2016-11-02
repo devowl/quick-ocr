@@ -19,7 +19,7 @@ namespace Qocr.Core.Data.Map2D
         /// </summary>
         public EulerMonomap2D(params int[] characteristics)
         {
-            ClassUtils.FillClassProperiesValues(this, PropertyPrefix, characteristics);
+            ClassUtils.FillClassProperiesValues(this, PropertyPrefix, characteristics.Cast<object>().ToArray());
         }
 
         /// <summary>
@@ -36,10 +36,11 @@ namespace Qocr.Core.Data.Map2D
         public EulerMonomap2D(IDictionary<string, int> squares)
         {
             var eulerProperties = GetEulerProperties()
+                .Where(property => property.GetCustomAttributes(typeof(EulerPathAttribute), false).Any())
                 .ToDictionary(
                     property => property,
                     property =>
-                        (EulerPathAttribute)property.GetCustomAttributes(typeof(EulerPathAttribute), true).First());
+                        (EulerPathAttribute)property.GetCustomAttributes(typeof(EulerPathAttribute), false).FirstOrDefault());
 
             foreach (var square in squares)
             {
@@ -165,7 +166,34 @@ namespace Qocr.Core.Data.Map2D
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return GetEulerProperties().Aggregate(0, (current, t) => current ^ (int)t.GetValue(this, null));
+            return S0 ^ S1 ^ S2 ^ S3 ^ S4 ^ S5 ^ S6 ^ S7 ^ S8 ^ S9 ^ S10 ^ S11 ^ S12 ^ S13 ^ S14;
+        }
+
+        public override bool Equals(object obj)
+        {
+            EulerMonomap2D objEuler = obj as EulerMonomap2D;
+            if (objEuler == null)
+            {
+                return false;
+            }
+
+            return 
+                objEuler.S0  == S0  && 
+                objEuler.S1  == S1  &&
+                objEuler.S2  == S2  &&
+                objEuler.S3  == S3  &&
+                objEuler.S4  == S4  &&
+                objEuler.S5  == S5  &&
+                objEuler.S6  == S6  &&
+                objEuler.S7  == S7  &&
+                objEuler.S8  == S8  &&
+                objEuler.S9  == S9  &&
+                objEuler.S10 == S10 &&
+                objEuler.S11 == S11 &&
+                objEuler.S12 == S12 &&
+                objEuler.S13 == S13 &&
+                objEuler.S14 == S14;
+
         }
 
         private IList<PropertyInfo> GetEulerProperties()
@@ -173,8 +201,22 @@ namespace Qocr.Core.Data.Map2D
             return
                 GetType()
                     .GetProperties()
-                    .Where(property => !property.CanWrite && property.Name.StartsWith(PropertyPrefix))
+                    .Where(property => property.Name.StartsWith(PropertyPrefix))
                     .ToList();
         }
+
+        public override string ToString()
+        {
+            return string.Join(",", S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14);
+        }                   
     }
 }
+
+
+
+
+
+
+
+
+

@@ -7,7 +7,9 @@ using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Qocr.Core.Data;
+using Qocr.Core.Data.Map2D;
 using Qocr.Core.Interfaces;
+using Qocr.Core.Recognition;
 
 namespace Qocr.UnitTests
 {
@@ -18,6 +20,10 @@ namespace Qocr.UnitTests
 
         private readonly string _taxiPng = string.Format(ImagesPathTemplate, "taxi.png");
 
+        private readonly string _malevichPng = string.Format(ImagesPathTemplate, "malevich.png");
+
+        private readonly string _malevichInvertedPng = string.Format(ImagesPathTemplate, "inverted_malevich.png");
+        
         [TestMethod]
         public void TaxiSize()
         {
@@ -48,6 +54,178 @@ namespace Qocr.UnitTests
                 Assert.AreEqual(monomap[2, 1], false);
                 Assert.AreEqual(monomap[3, 1], true);
                 Assert.AreEqual(monomap[4, 1], false);
+            }
+        }
+
+        [TestMethod]
+        public void TaxiEuler()
+        {
+            using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(_taxiPng))
+            using (Bitmap bitmap = new Bitmap(stream))
+            {
+                IMonomap monomap = new Monomap(bitmap);
+                var euler = EulerCharacteristicComputer.Compute2D(monomap);
+                Assert.AreEqual(euler.S0, 0);
+                Assert.AreEqual(euler.S1, 0);
+                Assert.AreEqual(euler.S2, 0);
+                Assert.AreEqual(euler.S3, 0);
+
+                Assert.AreEqual(euler.S4, 0);
+                Assert.AreEqual(euler.S5, 0);
+                Assert.AreEqual(euler.S6, 0);
+                Assert.AreEqual(euler.S7, 0);
+
+                Assert.AreEqual(euler.S8, 2);
+                Assert.AreEqual(euler.S9, 2);
+
+                Assert.AreEqual(euler.S10, 0);
+                Assert.AreEqual(euler.S11, 0);
+                Assert.AreEqual(euler.S12, 0);
+                Assert.AreEqual(euler.S13, 0);
+
+                Assert.AreEqual(euler.S14, 0);
+            }
+        }
+
+        [TestMethod]
+        public void MalevichSize()
+        {
+            using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(_malevichPng))
+            using (Bitmap bitmap = new Bitmap(stream))
+            {
+                IMonomap monomap = new Monomap(bitmap);
+                Assert.AreEqual(monomap.Height, 4);
+                Assert.AreEqual(monomap.Width, 4);
+            }
+        }
+
+        [TestMethod]
+        public void MalevichCellValues()
+        {
+            using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(_malevichPng))
+            using (Bitmap bitmap = new Bitmap(stream))
+            {
+                IMonomap monomap = new Monomap(bitmap);
+                Assert.AreEqual(monomap[0, 0], false);
+                Assert.AreEqual(monomap[1, 0], false);
+                Assert.AreEqual(monomap[2, 0], false);
+                Assert.AreEqual(monomap[3, 0], false);
+
+                Assert.AreEqual(monomap[0, 1], false);
+                Assert.AreEqual(monomap[1, 1], true);
+                Assert.AreEqual(monomap[2, 1], true);
+                Assert.AreEqual(monomap[3, 1], false);
+
+                Assert.AreEqual(monomap[0, 2], false);
+                Assert.AreEqual(monomap[1, 2], true);
+                Assert.AreEqual(monomap[2, 2], true);
+                Assert.AreEqual(monomap[3, 2], false);
+
+                Assert.AreEqual(monomap[0, 3], false);
+                Assert.AreEqual(monomap[1, 3], false);
+                Assert.AreEqual(monomap[2, 3], false);
+                Assert.AreEqual(monomap[3, 3], false);
+            }
+        }
+
+        [TestMethod]
+        public void MalevichEuler()
+        {
+            using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(_malevichPng))
+            using (Bitmap bitmap = new Bitmap(stream))
+            {
+                IMonomap monomap = new Monomap(bitmap);
+                var euler = EulerCharacteristicComputer.Compute2D(monomap);
+                Assert.AreEqual(euler.S0, 1);
+                Assert.AreEqual(euler.S1, 1);
+                Assert.AreEqual(euler.S2, 1);
+                Assert.AreEqual(euler.S3, 1);
+
+                Assert.AreEqual(euler.S4, 1);
+                Assert.AreEqual(euler.S5, 1);
+                Assert.AreEqual(euler.S6, 1);
+                Assert.AreEqual(euler.S7, 1);
+
+                Assert.AreEqual(euler.S8, 0);
+                Assert.AreEqual(euler.S9, 0);
+
+                Assert.AreEqual(euler.S10, 0);
+                Assert.AreEqual(euler.S11, 0);
+                Assert.AreEqual(euler.S12, 0);
+                Assert.AreEqual(euler.S13, 0);
+
+                Assert.AreEqual(euler.S14, 1);
+            }
+        }
+
+        [TestMethod]
+        public void MalevichInvertedSize()
+        {
+            using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(_malevichInvertedPng))
+            using (Bitmap bitmap = new Bitmap(stream))
+            {
+                IMonomap monomap = new Monomap(bitmap);
+                Assert.AreEqual(monomap.Height, 4);
+                Assert.AreEqual(monomap.Width, 4);
+            }
+        }
+
+        [TestMethod]
+        public void MalevichInvertedCellValues()
+        {
+            using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(_malevichInvertedPng))
+            using (Bitmap bitmap = new Bitmap(stream))
+            {
+                IMonomap monomap = new Monomap(bitmap);
+                Assert.AreEqual(monomap[0, 0], true);
+                Assert.AreEqual(monomap[1, 0], true);
+                Assert.AreEqual(monomap[2, 0], true);
+                Assert.AreEqual(monomap[3, 0], true);
+
+                Assert.AreEqual(monomap[0, 1], true);
+                Assert.AreEqual(monomap[1, 1], false);
+                Assert.AreEqual(monomap[2, 1], false);
+                Assert.AreEqual(monomap[3, 1], true);
+
+                Assert.AreEqual(monomap[0, 2], true);
+                Assert.AreEqual(monomap[1, 2], false);
+                Assert.AreEqual(monomap[2, 2], false);
+                Assert.AreEqual(monomap[3, 2], true);
+
+                Assert.AreEqual(monomap[0, 3], true);
+                Assert.AreEqual(monomap[1, 3], true);
+                Assert.AreEqual(monomap[2, 3], true);
+                Assert.AreEqual(monomap[3, 3], true);
+            }
+        }
+
+        [TestMethod]
+        public void MalevichInvertedEuler()
+        {
+            using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(_malevichInvertedPng))
+            using (Bitmap bitmap = new Bitmap(stream))
+            {
+                IMonomap monomap = new Monomap(bitmap);
+                var euler = EulerCharacteristicComputer.Compute2D(monomap);
+                Assert.AreEqual(euler.S0, 0);
+                Assert.AreEqual(euler.S1, 0);
+                Assert.AreEqual(euler.S2, 0);
+                Assert.AreEqual(euler.S3, 0);
+
+                Assert.AreEqual(euler.S4, 1);
+                Assert.AreEqual(euler.S5, 1);
+                Assert.AreEqual(euler.S6, 1);
+                Assert.AreEqual(euler.S7, 1);
+
+                Assert.AreEqual(euler.S8, 0);
+                Assert.AreEqual(euler.S9, 0);
+
+                Assert.AreEqual(euler.S10, 1);
+                Assert.AreEqual(euler.S11, 1);
+                Assert.AreEqual(euler.S12, 1);
+                Assert.AreEqual(euler.S13, 1);
+
+                Assert.AreEqual(euler.S14, 0);
             }
         }
     }
