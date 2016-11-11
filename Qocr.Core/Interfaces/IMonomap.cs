@@ -1,4 +1,6 @@
-﻿namespace Qocr.Core.Interfaces
+﻿using System;
+
+namespace Qocr.Core.Interfaces
 {
     /// <summary>
     /// Монохромное изображение.

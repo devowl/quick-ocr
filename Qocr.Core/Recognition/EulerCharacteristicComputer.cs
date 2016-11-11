@@ -10,7 +10,7 @@ namespace Qocr.Core.Recognition
     /// <summary>
     /// Класс для вычисления Эйлеровой характеристики изображения.
     /// </summary>
-    public static class EulerCharacteristicComputer
+    internal static class EulerCharacteristicComputer
     {
         private static readonly Square2D[] EulerSquares2D = new[]
         {
@@ -40,6 +40,7 @@ namespace Qocr.Core.Recognition
         {
             Dictionary<string, int> eulerValue = EulerSquares2D.ToDictionary(item => item.SquareIdent, item => 0);
             var fragment2DSize = 2;
+
             for (int y = 0; y < imageSource.Height - fragment2DSize + 1; y++)
             {
                 for (int x = 0; x < imageSource.Width - fragment2DSize + 1; x++)

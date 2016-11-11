@@ -9,6 +9,15 @@ namespace Qocr.Core.Data.Serialization
     public class SpecialChars
     {
         /// <summary>
+        /// Создание экземпляра класса <see cref="SpecialChars"/>.
+        /// </summary>
+        public SpecialChars()
+        {
+            LowcaseCharactors = new List<Symbol>();
+            UppercaseCharactors = new List<Symbol>();
+        }
+
+        /// <summary>
         /// Список символов нижнего регистра.
         /// </summary>
         public List<Symbol> LowcaseCharactors { get; set; }

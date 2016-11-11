@@ -126,7 +126,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Helpers\BitmapUtils.cs" />
-    <Compile Include="Helpers\MonomapExtentions.cs" />
     <Compile Include="Windows\ViewModels\MainWindowViewModel.cs" />
     <Compile Include="Windows\Views\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>

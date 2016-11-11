@@ -20,6 +20,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -41,28 +42,53 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Approximation\BrightnessBaseApproximator.cs" />
-    <Compile Include="Approximation\FastApproximator.cs" />
-    <Compile Include="Approximation\MostPopularColorApproximator.cs" />
-    <Compile Include="Approximation\MyApproximator.cs" />
-    <Compile Include="Approximation\OneBitApproximator.cs" />
+    <Compile Include="Approximation\LuminosityApproximator.cs" />
     <Compile Include="Data\Attributes\EulerPathAttribute.cs" />
+    <Compile Include="Interfaces\IAnalyzer.cs" />
+    <Compile Include="Recognition\Data\BitmapPad.cs" />
     <Compile Include="Data\BitMonomap.cs" />
+    <Compile Include="Recognition\Data\QReport.cs" />
+    <Compile Include="Recognition\Data\QStyle.cs" />
+    <Compile Include="Recognition\Logic\DefaultAnalyzer.cs" />
+    <Compile Include="Recognition\Data\EditMonomap.cs" />
     <Compile Include="Data\Map2D\EulerMonomap2D.cs" />
     <Compile Include="Data\Map2D\Square2D.cs" />
+    <Compile Include="Data\MonomapBase.cs" />
     <Compile Include="Data\Serialization\CompressionUtils.cs" />
     <Compile Include="Data\Serialization\EulerContainer.cs" />
     <Compile Include="Data\Serialization\Language.cs" />
     <Compile Include="Data\Serialization\SpecialChars.cs" />
     <Compile Include="Data\Serialization\Symbol.cs" />
     <Compile Include="Interfaces\IApproximator.cs" />
+    <Compile Include="Interfaces\IEditMonomap.cs" />
     <Compile Include="Interfaces\IEulerSquare.cs" />
     <Compile Include="Interfaces\IMonomap.cs" />
     <Compile Include="Data\Monomap.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Recognition\Data\QAnalyzedSymbol.cs" />
+    <Compile Include="Recognition\Data\QChar.cs" />
+    <Compile Include="Recognition\Data\QState.cs" />
+    <Compile Include="Recognition\Data\QSymbol.cs" />
     <Compile Include="Recognition\EulerCharacteristicComputer.cs" />
+    <Compile Include="Recognition\Logic\DefaultScanner.cs" />
+    <Compile Include="Interfaces\IScanner.cs" />
     <Compile Include="Recognition\TextRecognizer.cs" />
     <Compile Include="Utils\ClassUtils.cs" />
+    <Compile Include="Utils\MonomapExtentions.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Gen.bin" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

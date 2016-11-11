@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Qocr.Core.Data;
 using Qocr.Core.Interfaces;
 using Qocr.Core.Recognition;
+using Qocr.Core.Utils;
 
 namespace Qocr.UnitTests
 {
@@ -66,6 +67,19 @@ namespace Qocr.UnitTests
             Assert.AreEqual(euler.S13, 0);
 
             Assert.AreEqual(euler.S14, 0);
+        }
+
+        [TestMethod]
+        public void Clone()
+        {
+            var source = new BitMonomap(_bitImage);
+            var cloned = source.Clone();
+
+            Assert.AreEqual(source.Height, cloned.Height);
+            Assert.AreEqual(source.Width, cloned.Width);
+
+            Assert.AreEqual(source[0, 0], cloned[0, 0]);
+            Assert.AreEqual(source[source.Width - 1, source.Height - 1], cloned[cloned.Width - 1, cloned.Height - 1]);
         }
     }
 }

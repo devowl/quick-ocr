@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -10,7 +11,7 @@ namespace Qocr.Core.Data.Map2D
     /// <summary>
     /// Эйлеровая характеристика для изображения.
     /// </summary>
-    public class EulerMonomap2D
+    public class EulerMonomap2D : IComparable
     {
         private const string PropertyPrefix = "S";
 
@@ -169,6 +170,19 @@ namespace Qocr.Core.Data.Map2D
             return S0 ^ S1 ^ S2 ^ S3 ^ S4 ^ S5 ^ S6 ^ S7 ^ S8 ^ S9 ^ S10 ^ S11 ^ S12 ^ S13 ^ S14;
         }
 
+        /// <inheritdoc/>
+        public int CompareTo(object obj)
+        {
+            EulerMonomap2D objEuler = obj as EulerMonomap2D;
+            if (objEuler == null)
+            {
+                return int.MinValue;
+            }
+
+            return S0 - objEuler.S0
+        }
+
+        /// <inheritdoc/>
         public override bool Equals(object obj)
         {
             EulerMonomap2D objEuler = obj as EulerMonomap2D;
@@ -193,7 +207,43 @@ namespace Qocr.Core.Data.Map2D
                 objEuler.S12 == S12 &&
                 objEuler.S13 == S13 &&
                 objEuler.S14 == S14;
+        }
 
+        /// <summary>
+        /// Перегрузка оператора вычисления разницы.
+        /// </summary>
+        /// <param name="left">Из чего вычитается.</param>
+        /// <param name="right">Что вычитается.</param>
+        /// <returns>Результат разницы.</returns>
+        public static EulerMonomap2D operator -(EulerMonomap2D left, EulerMonomap2D right)
+        {
+            // TODO Возможно стоит Abs делать так как плюс это разница в одну сторону а минус в другую
+            var diff = new[]
+            {
+                left.S0 - right.S0,
+                left.S1 - right.S1,
+                left.S2 - right.S2,
+                left.S3 - right.S3,
+                left.S4 - right.S4,
+                left.S5 - right.S5,
+                left.S6 - right.S6,
+                left.S7 - right.S7,
+                left.S8 - right.S8,
+                left.S9 - right.S9,
+                left.S10 - right.S10,
+                left.S11 - right.S11,
+                left.S12 - right.S12,
+                left.S13 - right.S13,
+                left.S14 - right.S14,
+            };
+
+            return new EulerMonomap2D(diff);
+        }
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return string.Join(",", S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14);
         }
 
         private IList<PropertyInfo> GetEulerProperties()
@@ -203,12 +253,7 @@ namespace Qocr.Core.Data.Map2D
                     .GetProperties()
                     .Where(property => property.Name.StartsWith(PropertyPrefix))
                     .ToList();
-        }
-
-        public override string ToString()
-        {
-            return string.Join(",", S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14);
-        }                   
+        }              
     }
 }
 

@@ -1,19 +1,17 @@
 ﻿using System;
 using System.Drawing;
 
-using Qocr.Core.Interfaces;
-
 namespace Qocr.Core.Data
 {
     /// <summary>
-    /// Реализация <see cref="IMonomap"/> для работы с <see cref="Bitmap"/>.
+    /// Реализация IMonomap для работы с <see cref="Bitmap"/>.
     /// </summary>
-    public class Monomap : IMonomap
+    public class Monomap : MonomapBase
     {
         private readonly Color _blackColor;
 
         private readonly Bitmap _image;
-
+        
         /// <summary>
         /// Создание экземпляра класса <see cref="Monomap"/>.
         /// </summary>
@@ -37,34 +35,12 @@ namespace Qocr.Core.Data
         }
 
         /// <inheritdoc/>
-        public int Width => _image.Width;
+        public override int Width => _image.Width;
 
         /// <inheritdoc/>
-        public int Height => _image.Height;
+        public override int Height => _image.Height;
 
         /// <inheritdoc/>
-        public bool this[int x, int y]
-        {
-            get
-            {
-                if (!IsPointInsideImage(x, y))
-                {
-                    throw new ArgumentOutOfRangeException(nameof(x) + nameof(y));
-                }
-
-                var pixel = _image.GetPixel(x, y);
-                return pixel == _blackColor;
-            }
-        }
-
-        private static bool CheckBounds(int bound, int length)
-        {
-            return 0 <= bound && bound < length;
-        }
-
-        private bool IsPointInsideImage(int x, int y)
-        {
-            return CheckBounds(x, _image.Width) && CheckBounds(y, _image.Height);
-        }
+        public override bool this[int x, int y] => _image.GetPixel(x, y) == _blackColor;
     }
 }

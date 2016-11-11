@@ -37,11 +37,13 @@ namespace Qocr.Generator
                 throw new ArgumentNullException(nameof(localizationName));
             }
 
-            return await Task.Factory.StartNew(
+            Language language = new Language { LocalizationName = localizationName };
+            language.MaxFontSize = largestMaxSize;
+            language.MinFontSize = lowestMinSize;
+
+            await Task.Factory.StartNew(
                 () =>
                 {
-                    Language language = new Language { LocalizationName = localizationName };
-
                     language.LowcaseCharactors.AddRange(
                         sourceChars.Select(@char => new Symbol { Chr = char.ToLower(@char) }));
                     language.UppercaseCharactors.AddRange(
@@ -55,8 +57,10 @@ namespace Qocr.Generator
                         language.UppercaseCharactors,
                         fontFamilies);
 
-                    return language;
+                    
                 });
+
+            return language;
         }
 
         public async Task<SpecialChars> GenerateSpecialChars(
@@ -121,20 +125,18 @@ namespace Qocr.Generator
                 FontStyle.Italic,
             };
 
-            foreach (var fontFamily in fontFamilies)
-            {
-                foreach (var fontStyle in styles)
+            Parallel.ForEach(
+                fontFamilies,
+                fontFamily =>
                 {
-                    var newFont = new Font(fontFamily, lowestMinSize, fontStyle);
-                    InternalGenerateEulerValue(lowcaseChars, newFont, lowestMinSize, largestMaxSize, lowcaseColleciton);
-                    InternalGenerateEulerValue(
-                        uppercaseChars,
-                        newFont,
-                        lowestMinSize,
-                        largestMaxSize,
-                        uppercaseColleciton);
-                }
-            }
+                    foreach (var fontStyle in styles)
+                    {
+                        var newFont = new Font(fontFamily, lowestMinSize, fontStyle);
+                        InternalGenerateEulerValue(lowcaseChars, newFont, lowestMinSize, largestMaxSize, lowcaseColleciton);
+                        InternalGenerateEulerValue(uppercaseChars, newFont, lowestMinSize, largestMaxSize, uppercaseColleciton);
+                    }
+                });
+            
         }
 
         private void InternalGenerateEulerValue(

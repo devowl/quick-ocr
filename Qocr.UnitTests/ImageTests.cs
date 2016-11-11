@@ -10,6 +10,7 @@ using Qocr.Core.Data;
 using Qocr.Core.Data.Map2D;
 using Qocr.Core.Interfaces;
 using Qocr.Core.Recognition;
+using Qocr.Core.Utils;
 
 namespace Qocr.UnitTests
 {
@@ -224,6 +225,41 @@ namespace Qocr.UnitTests
                 Assert.AreEqual(euler.S11, 1);
                 Assert.AreEqual(euler.S12, 1);
                 Assert.AreEqual(euler.S13, 1);
+
+                Assert.AreEqual(euler.S14, 0);
+            }
+        }
+
+        [TestMethod]
+        public void DiffEuler()
+        {
+            using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(_malevichInvertedPng))
+            using (Bitmap bitmap = new Bitmap(stream))
+            {
+                IMonomap monomap = new Monomap(bitmap);
+                var copyMonomap = monomap.Clone();
+                var euler = EulerCharacteristicComputer.Compute2D(monomap);
+                var copyEuler = EulerCharacteristicComputer.Compute2D(copyMonomap);
+
+                euler = euler - copyEuler;
+
+                Assert.AreEqual(euler.S0, 0);
+                Assert.AreEqual(euler.S1, 0);
+                Assert.AreEqual(euler.S2, 0);
+                Assert.AreEqual(euler.S3, 0);
+
+                Assert.AreEqual(euler.S4, 0);
+                Assert.AreEqual(euler.S5, 0);
+                Assert.AreEqual(euler.S6, 0);
+                Assert.AreEqual(euler.S7, 0);
+
+                Assert.AreEqual(euler.S8, 0);
+                Assert.AreEqual(euler.S9, 0);
+
+                Assert.AreEqual(euler.S10, 0);
+                Assert.AreEqual(euler.S11, 0);
+                Assert.AreEqual(euler.S12, 0);
+                Assert.AreEqual(euler.S13, 0);
 
                 Assert.AreEqual(euler.S14, 0);
             }

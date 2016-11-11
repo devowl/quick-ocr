@@ -66,6 +66,8 @@
     <Compile Include="BitMonomapTests.cs" />
     <Compile Include="CompressionTests.cs" />
     <Compile Include="SerializationTests.cs" />
+    <Compile Include="BitmapPadTests.cs" />
+    <Compile Include="EditMonomapTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Qocr.Core\Qocr.Core.csproj">

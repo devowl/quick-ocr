@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
@@ -15,9 +16,14 @@ using Microsoft.Win32;
 
 using Qocr.Core.Approximation;
 using Qocr.Core.Data.Serialization;
+using Qocr.Core.Interfaces;
+using Qocr.Core.Recognition;
+using Qocr.Core.Utils;
 using Qocr.Generator;
 using Qocr.Generator.Data;
 using Qocr.Tester.Helpers;
+
+using FontFamily = System.Drawing.FontFamily;
 
 namespace Qocr.Tester.Windows.ViewModels
 {
@@ -31,14 +37,14 @@ namespace Qocr.Tester.Windows.ViewModels
 
         private bool _genStated;
 
-        //private void TestGen()
-        //{
-        //    using (FileStream fileStream = new FileStream("Gen.bin", FileMode.Open))
-        //    {
-        //        var container = CompressionUtils.Decompress<EulerContainer>(fileStream);
+        private void TestGen()
+        {
+            using (FileStream fileStream = new FileStream("Gen.bin", FileMode.Open))
+            {
+                var container = CompressionUtils.Decompress<EulerContainer>(fileStream);
 
-        //    }
-        //}
+            }
+        }
 
         private bool _isPastProcessing;
 
@@ -51,7 +57,30 @@ namespace Qocr.Tester.Windows.ViewModels
             OpenSourceImageCommand = new DelegateCommand(OpenSourceImage);
             ImagePastCommand = new DelegateCommand(ImagePast);
             GenCommand = new DelegateCommand(GenStart, CanGen);
-            _generator.BitmapCreated += GeneratorOnBitmapCreated;
+            TestCommand = new DelegateCommand(Test);
+            //_generator.BitmapCreated += GeneratorOnBitmapCreated;
+        }
+
+        private void Test()
+        {
+            var debugFolder = new DirectoryInfo(@"BmpDebug");
+            foreach (var file in debugFolder.GetFiles())
+            {
+                file.Delete();
+            }
+
+            TextRecognizer recognizer = new TextRecognizer();
+            var bm = (Bitmap)Image.FromFile("MiniTest.png");
+            recognizer.PrintTest = PrintTest;
+            var q= recognizer.Recognize(bm);
+        }
+
+        private int debugCount = 0;
+        private void PrintTest(IMonomap monomap)
+        {
+
+            monomap.ToBitmap().Save($"BmpDebug\\{debugCount}.png", ImageFormat.Png);
+            debugCount ++;
         }
 
         public Font CurrentFont
@@ -99,12 +128,7 @@ namespace Qocr.Tester.Windows.ViewModels
 
                 if (value != null)
                 {
-                    //MyApproximator appx = new MyApproximator(); 
-                    OneBitApproximator appx = new OneBitApproximator();
-
-                    // BrightnessBaseApproximator appx = new BrightnessBaseApproximator();
-                    //FastApproximator appx = new FastApproximator();
-
+                    var appx = new LuminosityApproximator();
                     var resultImage = appx.Approximate(BitmapUtils.BitmapFromSource((BitmapSource)value));
                     ApproximatedImage = BitmapUtils.SourceFromBitmap(resultImage.ToBitmap());
                 }
@@ -130,6 +154,8 @@ namespace Qocr.Tester.Windows.ViewModels
             }
         }
 
+        public DelegateCommand TestCommand { get; private set; }
+        
         public DelegateCommand GenCommand { get; private set; }
 
         public DelegateCommand ImagePastCommand { get; private set; }
@@ -141,29 +167,53 @@ namespace Qocr.Tester.Windows.ViewModels
             return !_genStated;
         }
 
-        private async void GenStart()
+        private void RecreateTestDir()
         {
-            _genStated = true;
-            GenCommand.RaiseCanExecuteChanged();
-            _genImageNumber = 0;
-
             if (Directory.Exists("BmpDebug"))
             {
                 Directory.Delete("BmpDebug", true);
             }
 
             Directory.CreateDirectory("BmpDebug");
-            while (!Directory.Exists("BmpDebug"));
+            while (!Directory.Exists("BmpDebug")) ;
+        }
+
+        private async void GenStart()
+        {
+            if (File.Exists("Gen.bin"))
+            {
+                TestGen();
+                if (MessageBox.Show("Файл Gen.bin существует, заменить ?", "Q?", MessageBoxButton.YesNo) ==
+                    MessageBoxResult.No)
+                {
+                    return;
+                }
+            }
+
+            
+
+            _genStated = true;
+            GenCommand.RaiseCanExecuteChanged();
+            _genImageNumber = 0;
+
+            RecreateTestDir();
 
             DateTime dNow = DateTime.Now;
 
             EulerContainer container = new EulerContainer();
-            int minFont = 8, maxFont = 35;
+            int minFont = 8, maxFont = 28;
 
-            //int minFont = 11, maxFont = 11;
+            var fontFamilies = new[]
+            {
+                new FontFamily("Times New Roman"),
+                new FontFamily("Arial"),
+                new FontFamily("Courier"),
+            };
 
-            var ruLang = await GenerateLanguage("RU-ru", minFont, maxFont, 'а', 'я');
-            var enLang = await GenerateLanguage("EN-en", minFont, maxFont, 'a', 'z');
+            var ruLang = await GenerateLanguage("RU-ru", minFont, maxFont, 'а', 'я', fontFamilies);
+            var enLang = await GenerateLanguage("EN-en", minFont, maxFont, 'a', 'z', fontFamilies);
+            
+            ruLang.FontFamilyNames = enLang.FontFamilyNames = fontFamilies.Select(font => font.Name).ToList();
 
             container.Languages.Add(ruLang);
             container.Languages.Add(enLang);
@@ -182,26 +232,14 @@ namespace Qocr.Tester.Windows.ViewModels
             GenCommand.RaiseCanExecuteChanged();
         }
 
-        private async Task<Language> GenerateLanguage(
-            string localization,
-            int minFont,
-            int maxFont,
-            char startChr,
-            char endChr)
+        private async Task<Language> GenerateLanguage(string localization, int minFont, int maxFont, char startChr, char endChr, FontFamily[] fontFamilies)
         {
             List<char> chars = new List<char>();
             for (char c = startChr; c <= endChr; c++)
             {
                 chars.Add(c);
             }
-
-            var fontFamilies = new[]
-            {
-                new System.Drawing.FontFamily("Times New Roman"),
-                new System.Drawing.FontFamily("Arial"),
-                new System.Drawing.FontFamily("Courier"),
-            };
-
+            
             return await _generator.GenerateLanguage(chars.ToArray(), minFont, maxFont, localization, fontFamilies);
         }
 
@@ -222,44 +260,54 @@ namespace Qocr.Tester.Windows.ViewModels
                 new Action(
                     () =>
                     {
-                        var chr = args.Chr;
-                        var bmp = args.GeneratedBitmap;
-                        var font = args.CurrentFont;
-                        var fontName = font.FontFamily.Name;
-                        var fontSize = font.Size;
-                        var fontStyle = font.Style;
-                        var debugDir = "BmpDebug";
-
-                        var chrEx = chr.ToString();
-                        if (char.IsLetter(chr))
-                        {
-                            chrEx = char.IsUpper(chr) ? $"^{chr}" : $"{chr}";
-                        }
-
-                        var chrDir = Path.Combine(debugDir, chrEx);
-                        if (!Directory.Exists(chrDir))
-                        {
-                            Directory.CreateDirectory(chrDir);
-                            while (!Directory.Exists(chrDir));
-                        }
-
-                        var debugFileName =
-                            $"{fontName} {fontSize} {fontStyle}.png";
-                        bmp.Save(Path.Combine(chrDir, debugFileName), ImageFormat.Png);
-
                         try
                         {
-                            CurrentGenImage = BitmapUtils.SourceFromBitmap(bmp);
+                            var chr = args.Chr;
+                            var bmp = args.GeneratedBitmap;
+                            var font = args.CurrentFont;
+                            var fontName = font.FontFamily.Name;
+                            var fontSize = font.Size;
+                            var fontStyle = font.Style;
+                            var debugDir = "BmpDebug";
+
+                            var chrEx = chr.ToString();
+                            if (char.IsLetter(chr))
+                            {
+                                chrEx = char.IsUpper(chr) ? $"^{chr}" : $"{chr}";
+                            }
+
+                            var chrDir = Path.Combine(debugDir, chrEx);
+                            if (!Directory.Exists(chrDir))
+                            {
+                                Directory.CreateDirectory(chrDir);
+                                while (!Directory.Exists(chrDir));
+                            }
+
+                            var debugFileName =
+                                $"{fontName} {fontSize} {fontStyle}.png";
+                            bmp.Save(Path.Combine(chrDir, debugFileName), ImageFormat.Png);
+
+                            
+                                CurrentGenImage = BitmapUtils.SourceFromBitmap(bmp);
+                            
+                            
+
+                            _genImageNumber ++;
+                            bmp.Dispose();
+                            CurrentFont = args.CurrentFont;
                         }
                         catch (Exception)
                         {
-                            CurrentGenImage = IconToImageSource(SystemIcons.Error);
+                            try
+                            {
+                                CurrentGenImage = IconToImageSource(SystemIcons.Error);
+                            }
+                            catch (Exception)
+                            {
+                                
+                            }
+                            
                         }
-                        
-
-                        _genImageNumber ++;
-                        bmp.Dispose();
-                        CurrentFont = args.CurrentFont;
                     }));
         }
 
