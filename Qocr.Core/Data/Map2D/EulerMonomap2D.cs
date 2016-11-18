@@ -156,18 +156,17 @@ namespace Qocr.Core.Data.Map2D
         public int S14 { get; private set; }
 
         /// <inheritdoc/>
-        public int SquareSize
-        {
-            get
-            {
-                return 2;
-            }
-        }
+        public int SquareSize => 2;
 
         /// <inheritdoc/>
         public override int GetHashCode()
         {
             return S0 ^ S1 ^ S2 ^ S3 ^ S4 ^ S5 ^ S6 ^ S7 ^ S8 ^ S9 ^ S10 ^ S11 ^ S12 ^ S13 ^ S14;
+        }
+
+        private class MyClass : IEqualityComparer<>
+        {
+             
         }
 
         /// <inheritdoc/>
@@ -179,7 +178,22 @@ namespace Qocr.Core.Data.Map2D
                 return int.MinValue;
             }
 
-            return S0 - objEuler.S0
+            return 
+                Math.Abs(S0 - objEuler.S0) +
+                Math.Abs(S1 - objEuler.S1) +
+                Math.Abs(S2 - objEuler.S2) +
+                Math.Abs(S3 - objEuler.S3) +
+                Math.Abs(S4 - objEuler.S4) +
+                Math.Abs(S5 - objEuler.S5) +
+                Math.Abs(S6 - objEuler.S6) +
+                Math.Abs(S7 - objEuler.S7) +
+                Math.Abs(S8 - objEuler.S8) +
+                Math.Abs(S9 - objEuler.S9) +
+                Math.Abs(S10 - objEuler.S10) +
+                Math.Abs(S11 - objEuler.S11) +
+                Math.Abs(S12 - objEuler.S12) +
+                Math.Abs(S13 - objEuler.S13) +
+                Math.Abs(S14 - objEuler.S14);
         }
 
         /// <inheritdoc/>

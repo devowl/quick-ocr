@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 using Qocr.Core.Data.Map2D;
@@ -17,7 +18,7 @@ namespace Qocr.Core.Recognition.Logic
         /// <summary>
         /// Значение приближения значений, которое говорит о том что символ может являться данным изображением.
         /// </summary>
-        private const int RoundingPercents = 15;
+        private const int RoundingPercents = 5;
 
         private readonly EulerContainer _container;
 
@@ -72,10 +73,10 @@ namespace Qocr.Core.Recognition.Logic
                         foreach (var eulerHashset in eulerStandarts)
                         {
                             QChar @char;
-                            if (TryFind(eulerHashset, currentEuler, symbol.Chr, monomap, out @char))
-                            {
-                                resultData.Add(@char);
-                            }
+                            resultData.Add(
+                                TryFind(eulerHashset, currentEuler, symbol.Chr, monomap, out @char)
+                                    ? @char
+                                    : QChar.Unknown);
                         }
                     }
                 }
@@ -84,20 +85,27 @@ namespace Qocr.Core.Recognition.Logic
             return new QAnalyzedSymbol(monomap, resultData);
         }
 
-        private bool TryFind(HashSet<EulerMonomap2D> eulerList, EulerMonomap2D charEuler, char chr, IMonomap image, out QChar @char)
+        private bool TryFind(ICollection<EulerMonomap2D> eulerList, EulerMonomap2D charEuler, char chr, IMonomap image, out QChar @char)
         {
+            @char = null;
+
             // Если данный символ присутствует в базе знаний
-            //if (eulerList.Contains(charEuler))
-            //{
-            //    @char = new QChar(chr, QState.Ok);
-            //    return true;
-            //}
+            if (eulerList.Contains(charEuler))
+            {
+                @char = new QChar(chr, QState.Ok);
+                return true;
+            }
 
-            //if(charEuler)
+            // TODO дорогое вычисление, пока тестовый вариант
+            var eulerDiff = eulerList.ToDictionary(item => item.CompareTo(charEuler), item => item);
+            var minEulerDiffValue = eulerDiff.Keys.Min();
+            if (minEulerDiffValue < _roundingPrecents)
+            {
+                @char = new QChar(chr, QState.Assumptions);
+                return true;
+            }
 
-
-
-            // TODO стоит искать минимальный вектор.
+            return false;
         }
     }
 }

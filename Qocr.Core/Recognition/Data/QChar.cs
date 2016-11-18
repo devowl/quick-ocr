@@ -6,6 +6,11 @@
     public class QChar
     {
         /// <summary>
+        /// Неизвестный символ.
+        /// </summary>
+        public static QChar Unknown = new QChar('?', QState.Unknown);
+
+        /// <summary>
         /// Создание экземпляра класса <see cref="QChar"/>.
         /// </summary>
         public QChar(char chr, QState state)

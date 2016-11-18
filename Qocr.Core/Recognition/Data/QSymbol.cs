@@ -28,5 +28,15 @@ namespace Qocr.Core.Recognition.Data
         /// </summary>
         /// <remarks>Ширину и высоту можно узнать из <see cref="IMonomap"/>.</remarks>
         public Point StartPoint { get; private set; }
+
+        /// <summary>
+        /// Ширина изображения.
+        /// </summary>
+        public int Width => Monomap.Width;
+
+        /// <summary>
+        /// Высота изображения.
+        /// </summary>
+        public int Height => Monomap.Height;
     }
 }

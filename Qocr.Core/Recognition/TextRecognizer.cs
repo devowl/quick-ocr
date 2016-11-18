@@ -87,11 +87,13 @@ namespace Qocr.Core.Recognition
         /// <returns></returns>
         public QReport Recognize(IMonomap monomap)
         {
+            // TODO Там надо анализировать как то раздробленные картинки
             // Получаем все фрагменты изображения
             var fragments = _scanner.GetFragments(monomap);
 
-            throw new NotImplementedException();
-            //_analyzer.Analyze()
+            var qSymbols = fragments.Select(fragment => _analyzer.Analyze(fragment.Monomap)).ToList();
+
+            return new QReport(qSymbols);
         }
 
         private void PrintMeFast(IMonomap m)

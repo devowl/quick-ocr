@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
 namespace Qocr.Core.Recognition.Data
@@ -11,8 +12,9 @@ namespace Qocr.Core.Recognition.Data
         /// <summary>
         /// Создание экземпляра класса <see cref="QReport"/>.
         /// </summary>
-        public QReport()
+        public QReport(IList<QAnalyzedSymbol> symbols)
         {
+            Symbols = new ReadOnlyCollection<QAnalyzedSymbol>(symbols);
         }
 
         public ReadOnlyCollection<QAnalyzedSymbol> Symbols { get; private set; }
@@ -23,7 +25,8 @@ namespace Qocr.Core.Recognition.Data
         /// <returns></returns>
         public string RawText()
         {
-            // Пробелы ???
+            // TODO Векторный спуск, Оценить пробелы всё тут
+            // TODO Возможно метод получение текста части исходного изображения
             throw new NotImplementedException();
         }
     }
