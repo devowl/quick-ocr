@@ -44,6 +44,7 @@
   <ItemGroup>
     <Compile Include="Approximation\LuminosityApproximator.cs" />
     <Compile Include="Data\Attributes\EulerPathAttribute.cs" />
+    <Compile Include="Data\Serialization\SymbolCode.cs" />
     <Compile Include="Interfaces\IAnalyzer.cs" />
     <Compile Include="Recognition\Data\BitmapPad.cs" />
     <Compile Include="Data\BitMonomap.cs" />
@@ -57,7 +58,6 @@
     <Compile Include="Data\Serialization\CompressionUtils.cs" />
     <Compile Include="Data\Serialization\EulerContainer.cs" />
     <Compile Include="Data\Serialization\Language.cs" />
-    <Compile Include="Data\Serialization\SpecialChars.cs" />
     <Compile Include="Data\Serialization\Symbol.cs" />
     <Compile Include="Interfaces\IApproximator.cs" />
     <Compile Include="Interfaces\IEditMonomap.cs" />

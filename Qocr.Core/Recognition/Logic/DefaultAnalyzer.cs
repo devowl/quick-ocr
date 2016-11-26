@@ -51,57 +51,38 @@ namespace Qocr.Core.Recognition.Logic
             // Идём по всем языкам.
             foreach (var language in _container.Languages)
             {
-                var charCases = new[]
-                {
-                    language.LowcaseCharactors,
-                    language.UppercaseCharactors
-                };
-
                 // Идём по всем буквам языка
-                foreach (var charCase in charCases)
+                foreach (var symbol in language.Chars)
                 {
-                    foreach (var symbol in charCase)
-                    {
-                        var eulerStandarts = new[]
-                        {
-                            symbol.CodesBold,
-                            symbol.CodesItalic,
-                            symbol.CodesNormal,
-
-                        };
-
-                        foreach (var eulerHashset in eulerStandarts)
-                        {
-                            QChar @char;
-                            resultData.Add(
-                                TryFind(eulerHashset, currentEuler, symbol.Chr, monomap, out @char)
-                                    ? @char
-                                    : QChar.Unknown);
-                        }
-                    }
+                    QChar @char;
+                    resultData.Add(
+                        TryFind(symbol, currentEuler, monomap, out @char)
+                            ? @char
+                            : QChar.Unknown);
                 }
+                
             }
 
             return new QAnalyzedSymbol(monomap, resultData);
         }
 
-        private bool TryFind(ICollection<EulerMonomap2D> eulerList, EulerMonomap2D charEuler, char chr, IMonomap image, out QChar @char)
+        private bool TryFind(Symbol symbol, EulerMonomap2D charEuler, IMonomap image, out QChar @char)
         {
             @char = null;
 
             // Если данный символ присутствует в базе знаний
-            if (eulerList.Contains(charEuler))
+            if (symbol.Codes.Any(item => Equals(item.EulerCode, charEuler)))
             {
-                @char = new QChar(chr, QState.Ok);
+                @char = new QChar(symbol.Chr, QState.Ok);
                 return true;
             }
 
             // TODO дорогое вычисление, пока тестовый вариант
-            var eulerDiff = eulerList.ToDictionary(item => item.CompareTo(charEuler), item => item);
+            var eulerDiff = symbol.Codes.ToDictionary(item => item.EulerCode.CompareTo(charEuler), item => item);
             var minEulerDiffValue = eulerDiff.Keys.Min();
             if (minEulerDiffValue < _roundingPrecents)
             {
-                @char = new QChar(chr, QState.Assumptions);
+                @char = new QChar(symbol.Chr, QState.Assumptions);
                 return true;
             }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
@@ -11,88 +12,72 @@ namespace Qocr.Core.Data.Serialization
     /// <summary>
     /// Сериализуемая информация о символе.
     /// </summary>
+    [DebuggerDisplay("{Chr} ({Codes.Count})")]
     public class Symbol
     {
-        private const string Seporator = ";";
+        /// <summary>
+        /// Разделитель всего сериализуемого значения.
+        /// </summary>
+        internal const string Seporator = ";";
+        
+        /// <summary>
+        /// Разделитель для свойств сериализуемого значения.
+        /// </summary>
+        internal const char SetSplitter = '/';
 
         /// <summary>
         /// Создание экземпляра класса <see cref="Symbol"/>.
         /// </summary>
         public Symbol()
         {
-            CodesItalic = new HashSet<EulerMonomap2D>();
-            CodesBold = new HashSet<EulerMonomap2D>();
-            CodesNormal = new HashSet<EulerMonomap2D>();
+            Codes = new HashSet<SymbolCode>();
         }
 
         /// <summary>
-        /// Код символа.
+        /// Символ.
         /// </summary>
         public char Chr { get; set; }
 
         /// <summary>
-        /// Строка из кодов для жирного шрифта.
+        /// Коды символа <see cref="Chr"/>.
         /// </summary>
-        public string StringsCodesBold { get; set; }
+        [IgnoreDataMember]
+        public HashSet<SymbolCode> Codes { get; set; }
 
         /// <summary>
-        /// Строка из кодов для курсивного шрифта.
+        /// Строка из кодов.
         /// </summary>
-        public string StringsCodesItalic { get; set; }
-
-        /// <summary>
-        /// Строка из кодов для обычного шрифта.
-        /// </summary>
-        public string StringsCodesNormal { get; set; }
-
-        /// <summary>
-        /// Список эйлеровых характеристик для жирного шрифта.
-        /// </summary>
-        [XmlIgnore]
-        public HashSet<EulerMonomap2D> CodesBold { get; private set; }
-
-        /// <summary>
-        /// Список эйлеровых характеристик для обычного шрифта.
-        /// </summary>
-        [XmlIgnore]
-        public HashSet<EulerMonomap2D> CodesNormal { get; private set; }
-
-        /// <summary>
-        /// Список эйлеровых характеристик для курсивного шрифта.
-        /// </summary>
-        [XmlIgnore]
-        public HashSet<EulerMonomap2D> CodesItalic { get; private set; }
+        public string StringsCodes { get; set; }
 
         [OnSerializing]
         internal void OnSerializingMethod(StreamingContext context)
         {
-            StringsCodesBold = string.Join(Seporator, CodesBold);
-            StringsCodesItalic = string.Join(Seporator, CodesItalic);
-            StringsCodesNormal = string.Join(Seporator, CodesNormal);
+            StringsCodes = string.Join(Seporator, Codes.Select(code => $"{code.EulerCode}{SetSplitter}{code.FontSize}"));
         }
 
         [OnDeserialized]
         internal void OnDeserializedMethod(StreamingContext context)
         {
-            CodesItalic = GetData(StringsCodesItalic);
-            CodesNormal = GetData(StringsCodesNormal);
-            CodesBold = GetData(StringsCodesBold);
+            Codes = GetData(StringsCodes);
         }
 
-        private static HashSet<EulerMonomap2D> GetData(string sourceString)
+        private static HashSet<SymbolCode> GetData(string sourceString)
         {
             var splitter = new[]
             {
                 Seporator
             };
 
-            var result = new HashSet<EulerMonomap2D>();
+            var result = new HashSet<SymbolCode>();
             foreach (
-                var eulerMonomap2D in
+                var symbolCode in
                     (sourceString ?? string.Empty).Split(splitter, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(str => new EulerMonomap2D(str)))
+                        .Select(str => str.Split(SetSplitter))
+                        .Where(str => str.Any())
+                        .Select(split => new { euler = new EulerMonomap2D(split[0]), FontSize = int.Parse(split[1]), })
+                        .Select(item => new SymbolCode(item.FontSize, item.euler)))
             {
-                result.Add(eulerMonomap2D);
+                result.Add(symbolCode);
             }
 
             return result;

@@ -212,11 +212,25 @@ namespace Qocr.Tester.Windows.ViewModels
 
             var ruLang = await GenerateLanguage("RU-ru", minFont, maxFont, 'а', 'я', fontFamilies);
             var enLang = await GenerateLanguage("EN-en", minFont, maxFont, 'a', 'z', fontFamilies);
-            
+            var specialChars = new[]
+            {
+                '@',
+                '$',
+                '#',
+                '&',
+                '(',
+                ')',
+                '*',
+                '/',
+                '\\'
+            };
+            var specialCharsResult = await _generator.GenerateSpecialChars(specialChars, minFont, maxFont, fontFamilies);
+
             ruLang.FontFamilyNames = enLang.FontFamilyNames = fontFamilies.Select(font => font.Name).ToList();
 
             container.Languages.Add(ruLang);
             container.Languages.Add(enLang);
+            container.SpecialChars = specialCharsResult;
 
             var compression = CompressionUtils.Compress(container);
             using (FileStream fileStream = new FileStream("Gen.bin", FileMode.Create))

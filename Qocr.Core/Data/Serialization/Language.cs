@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Drawing;
 
 namespace Qocr.Core.Data.Serialization
 {
@@ -8,22 +7,19 @@ namespace Qocr.Core.Data.Serialization
     /// </summary>
     public class Language
     {
+        /// <summary>
+        /// Создание экземпляра класса <see cref="Language"/>.
+        /// </summary>
         public Language()
         {
-            LowcaseCharactors = new List<Symbol>();
-            UppercaseCharactors = new List<Symbol>();
+            Chars = new List<Symbol>();
             FontFamilyNames = new List<string>();
         }
 
         /// <summary>
-        /// Список символов нижнего регистра.
+        /// Символы.
         /// </summary>
-        public List<Symbol> LowcaseCharactors { get; set; }
-
-        /// <summary>
-        /// Список символов верхнего регистра.
-        /// </summary>
-        public List<Symbol> UppercaseCharactors { get; set; }
+        public List<Symbol> Chars { get; set; }
 
         /// <summary>
         /// Список использованных шрифтов.
@@ -35,15 +31,5 @@ namespace Qocr.Core.Data.Serialization
         /// </summary>
         /// <remarks>RU-ru, EN-en, и т.д.</remarks>
         public string LocalizationName { get; set; }
-
-        /// <summary>
-        /// Минимальный размер шрифта.
-        /// </summary>
-        public int MinFontSize { get; set; }
-
-        /// <summary>
-        /// Максимальный размер шрифта.
-        /// </summary>
-        public int MaxFontSize { get; set; }
     }
 }

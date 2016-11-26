@@ -13,6 +13,7 @@ namespace Qocr.Core.Data.Serialization
         public EulerContainer()
         {
             Languages = new List<Language>();
+            SpecialChars = new List<Symbol>();
         }
 
         /// <summary>
@@ -23,6 +24,6 @@ namespace Qocr.Core.Data.Serialization
         /// <summary>
         /// Набор спецсимволов.
         /// </summary>
-        public SpecialChars SpecialChars { get; set; }
+        public List<Symbol> SpecialChars { get; set; }
     }
 }

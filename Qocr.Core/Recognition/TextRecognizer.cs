@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
+
 using Qocr.Core.Approximation;
 using Qocr.Core.Data.Serialization;
 using Qocr.Core.Interfaces;
@@ -19,6 +17,8 @@ namespace Qocr.Core.Recognition
     /// </summary>
     public class TextRecognizer
     {
+        public Action<IMonomap> PrintTest;
+
         private readonly IApproximator _approximator;
 
         private readonly IAnalyzer _analyzer;
@@ -26,26 +26,29 @@ namespace Qocr.Core.Recognition
         private readonly IScanner _scanner;
 
         private readonly EulerContainer _container;
+
         /// <summary>
         /// Создание экземпляра класса <see cref="TextRecognizer"/>.
         /// </summary>
-        public TextRecognizer()
-            : this(new LuminosityApproximator(), null, null, null)
+        public TextRecognizer() : this(new LuminosityApproximator(), null, null, null)
         {
         }
 
         /// <summary>
         /// Создание экземпляра класса <see cref="TextRecognizer"/>.
         /// </summary>
-        public TextRecognizer(IApproximator approximator)
-            : this(approximator, null, null, null)
+        public TextRecognizer(IApproximator approximator) : this(approximator, null, null, null)
         {
         }
 
         /// <summary>
         /// Создание экземпляра класса <see cref="TextRecognizer"/>.
         /// </summary>
-        public TextRecognizer(IApproximator approximator, EulerContainer container, IAnalyzer analyzer, IScanner scanner)
+        public TextRecognizer(
+            IApproximator approximator,
+            EulerContainer container,
+            IAnalyzer analyzer,
+            IScanner scanner)
         {
             if (approximator == null)
             {
@@ -68,7 +71,7 @@ namespace Qocr.Core.Recognition
             _analyzer = analyzer ?? new DefaultAnalyzer(container);
             _scanner = scanner;
         }
-        
+
         /// <summary>
         /// Распознать.
         /// </summary>
@@ -103,7 +106,5 @@ namespace Qocr.Core.Recognition
                 PrintTest(m);
             }
         }
-
-        public Action<IMonomap> PrintTest;
     }
 }

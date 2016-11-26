@@ -38,23 +38,20 @@ namespace Qocr.Generator
             }
 
             Language language = new Language { LocalizationName = localizationName };
-            language.MaxFontSize = largestMaxSize;
-            language.MinFontSize = lowestMinSize;
 
             await Task.Factory.StartNew(
                 () =>
                 {
-                    language.LowcaseCharactors.AddRange(
+                    language.Chars.AddRange(
                         sourceChars.Select(@char => new Symbol { Chr = char.ToLower(@char) }));
-                    language.UppercaseCharactors.AddRange(
+                    language.Chars.AddRange(
                         sourceChars.Select(@char => new Symbol { Chr = char.ToUpper(@char) }));
 
                     InternalGenerateEulerCollections(
                         sourceChars,
                         lowestMinSize,
                         largestMaxSize,
-                        language.LowcaseCharactors,
-                        language.UppercaseCharactors,
+                        language.Chars,
                         fontFamilies);
 
                     
@@ -63,7 +60,7 @@ namespace Qocr.Generator
             return language;
         }
 
-        public async Task<SpecialChars> GenerateSpecialChars(
+        public async Task<List<Symbol>> GenerateSpecialChars(
             char[] sourceChars,
             int lowestMinSize,
             int largestMaxSize,
@@ -72,22 +69,20 @@ namespace Qocr.Generator
             return await Task.Factory.StartNew(
                 () =>
                 {
-                    SpecialChars specialChars = new SpecialChars();
-
-                    specialChars.LowcaseCharactors.AddRange(
+                    var result = new List<Symbol>();
+                    result.AddRange(
                         sourceChars.Select(@char => new Symbol { Chr = char.ToLower(@char) }));
-                    specialChars.UppercaseCharactors.AddRange(
+                    result.AddRange(
                         sourceChars.Select(@char => new Symbol { Chr = char.ToUpper(@char) }));
 
                     InternalGenerateEulerCollections(
                         sourceChars,
                         lowestMinSize,
                         largestMaxSize,
-                        specialChars.LowcaseCharactors,
-                        specialChars.UppercaseCharactors,
+                        result,
                         fontFamilies);
 
-                    return specialChars;
+                    return result;
                 });
         }
 
@@ -111,8 +106,7 @@ namespace Qocr.Generator
             char[] sourceChars,
             int lowestMinSize,
             int largestMaxSize,
-            List<Symbol> lowcaseColleciton,
-            List<Symbol> uppercaseColleciton,
+            List<Symbol> charColleciton,
             FontFamily[] fontFamilies)
         {
             var lowcaseChars = sourceChars.Select(char.ToLower).ToArray();
@@ -132,8 +126,8 @@ namespace Qocr.Generator
                     foreach (var fontStyle in styles)
                     {
                         var newFont = new Font(fontFamily, lowestMinSize, fontStyle);
-                        InternalGenerateEulerValue(lowcaseChars, newFont, lowestMinSize, largestMaxSize, lowcaseColleciton);
-                        InternalGenerateEulerValue(uppercaseChars, newFont, lowestMinSize, largestMaxSize, uppercaseColleciton);
+                        InternalGenerateEulerValue(lowcaseChars, newFont, lowestMinSize, largestMaxSize, charColleciton);
+                        InternalGenerateEulerValue(uppercaseChars, newFont, lowestMinSize, largestMaxSize, charColleciton);
                     }
                 });
             
@@ -158,20 +152,8 @@ namespace Qocr.Generator
 
                     var chr1 = chr;
                     Symbol symbol = symbols.First(s => s.Chr == chr1);
-                    switch (font.Style)
-                    {
-                        case FontStyle.Bold:
-                            symbol.CodesBold.Add(euler);
-                            break;
-                        case FontStyle.Italic:
-                            symbol.CodesItalic.Add(euler);
-                            break;
-                        case FontStyle.Regular:
-                            symbol.CodesNormal.Add(euler);
-                            break;
-                        default:
-                            throw new NotSupportedException(font.Style.ToString());
-                    }
+                    SymbolCode symbolCode = new SymbolCode(size, euler);
+                    symbol.Codes.Add(symbolCode);
 
                     BitmapCreated?.Invoke(this, new BitmapEventArgs((Bitmap)bitmap.Clone(), newFont, chr));
                 }

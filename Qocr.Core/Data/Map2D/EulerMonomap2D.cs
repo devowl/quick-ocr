@@ -163,12 +163,7 @@ namespace Qocr.Core.Data.Map2D
         {
             return S0 ^ S1 ^ S2 ^ S3 ^ S4 ^ S5 ^ S6 ^ S7 ^ S8 ^ S9 ^ S10 ^ S11 ^ S12 ^ S13 ^ S14;
         }
-
-        private class MyClass : IEqualityComparer<>
-        {
-             
-        }
-
+        
         /// <inheritdoc/>
         public int CompareTo(object obj)
         {
@@ -260,13 +255,13 @@ namespace Qocr.Core.Data.Map2D
             return string.Join(",", S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14);
         }
 
-        private IList<PropertyInfo> GetEulerProperties()
+        private IEnumerable<PropertyInfo> GetEulerProperties()
         {
             return
                 GetType()
                     .GetProperties()
                     .Where(property => property.Name.StartsWith(PropertyPrefix))
-                    .ToList();
+                    .ToArray();
         }              
     }
 }
