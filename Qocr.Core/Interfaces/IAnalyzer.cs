@@ -10,8 +10,8 @@ namespace Qocr.Core.Interfaces
         /// <summary>
         /// Проанализировать изображение.
         /// </summary>
-        /// <param name="monomap">Исходное изображение.</param>
+        /// <param name="fragment">Фрагмент изображение.</param>
         /// <returns>Распознанные символы.</returns>
-        QAnalyzedSymbol Analyze(IMonomap monomap);
+        QAnalyzedSymbol Analyze(QSymbol fragment);
     }
 }

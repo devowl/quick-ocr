@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 
@@ -10,6 +11,7 @@ namespace Qocr.Core.Recognition.Data
     /// <summary>
     /// Вся информация о символе на изображении.
     /// </summary>
+    [DebuggerDisplay("{Char} - {StartPoint}")]
     public class QAnalyzedSymbol : QSymbol
     {
         /// <summary>
@@ -20,7 +22,8 @@ namespace Qocr.Core.Recognition.Data
         /// <summary>
         /// Создание экземпляра класса <see cref="QAnalyzedSymbol"/>.
         /// </summary>
-        public QAnalyzedSymbol(IMonomap monomap, IEnumerable<QChar> recognitionChars) : base(monomap, Point.Empty)
+        public QAnalyzedSymbol(QSymbol sourceSymbol, IEnumerable<QChar> recognitionChars) 
+            : base(sourceSymbol.Monomap, sourceSymbol.StartPoint)
         {
             recognitionChars = recognitionChars ?? Enumerable.Empty<QChar>();
             Chars = new ReadOnlyCollection<QChar>(recognitionChars.ToList());

@@ -24,6 +24,7 @@ using Qocr.Generator.Data;
 using Qocr.Tester.Helpers;
 
 using FontFamily = System.Drawing.FontFamily;
+using FontStyle = System.Drawing.FontStyle;
 
 namespace Qocr.Tester.Windows.ViewModels
 {
@@ -33,7 +34,7 @@ namespace Qocr.Tester.Windows.ViewModels
 
         private ImageSource _sourceImage;
 
-        private EulerGenerator _generator = new EulerGenerator();
+        private readonly EulerGenerator _generator = new EulerGenerator();
 
         private bool _genStated;
 
@@ -42,7 +43,6 @@ namespace Qocr.Tester.Windows.ViewModels
             using (FileStream fileStream = new FileStream("Gen.bin", FileMode.Open))
             {
                 var container = CompressionUtils.Decompress<EulerContainer>(fileStream);
-
             }
         }
 
@@ -54,11 +54,21 @@ namespace Qocr.Tester.Windows.ViewModels
 
         public MainWindowViewModel()
         {
+            AnalyzeCommand = new DelegateCommand(Analyze);
             OpenSourceImageCommand = new DelegateCommand(OpenSourceImage);
             ImagePastCommand = new DelegateCommand(ImagePast);
             GenCommand = new DelegateCommand(GenStart, CanGen);
             TestCommand = new DelegateCommand(Test);
             //_generator.BitmapCreated += GeneratorOnBitmapCreated;
+        }
+
+        private void Analyze()
+        {
+            TextRecognizer recognizer = new TextRecognizer();
+            var bitmap = BitmapUtils.BitmapFromSource((BitmapSource)ApproximatedImage);
+            var report = recognizer.Recognize(bitmap);
+
+            //report.RawText()
         }
 
         private void Test()
@@ -162,6 +172,8 @@ namespace Qocr.Tester.Windows.ViewModels
 
         public DelegateCommand OpenSourceImageCommand { get; private set; }
 
+        public DelegateCommand AnalyzeCommand { get; private set; }
+
         private bool CanGen()
         {
             return !_genStated;
@@ -178,6 +190,7 @@ namespace Qocr.Tester.Windows.ViewModels
             while (!Directory.Exists("BmpDebug")) ;
         }
 
+
         private async void GenStart()
         {
             if (File.Exists("Gen.bin"))
@@ -189,9 +202,7 @@ namespace Qocr.Tester.Windows.ViewModels
                     return;
                 }
             }
-
             
-
             _genStated = true;
             GenCommand.RaiseCanExecuteChanged();
             _genImageNumber = 0;
@@ -201,17 +212,35 @@ namespace Qocr.Tester.Windows.ViewModels
             DateTime dNow = DateTime.Now;
 
             EulerContainer container = new EulerContainer();
-            int minFont = 8, maxFont = 28;
+            const int MinFont = 8;
+            const int MaxFont = 28;
 
-            var fontFamilies = new[]
+            List<FontFamily> allowedFonts = new List<FontFamily>();
+            foreach (var fontFamily in FontFamily.Families)
             {
-                new FontFamily("Times New Roman"),
-                new FontFamily("Arial"),
-                new FontFamily("Courier"),
-            };
+                var tempFont = new Font(fontFamily, 15, FontStyle.Regular, GraphicsUnit.Pixel);
+                var preview = EulerGenerator.PrintChar('Ъ', tempFont);
+                CurrentGenImage = BitmapUtils.SourceFromBitmap(preview);
 
-            var ruLang = await GenerateLanguage("RU-ru", minFont, maxFont, 'а', 'я', fontFamilies);
-            var enLang = await GenerateLanguage("EN-en", minFont, maxFont, 'a', 'z', fontFamilies);
+                if (MessageBox.Show("Используем ?", "", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                {
+                    allowedFonts.Add(fontFamily);
+                }
+            }
+
+            var fontFamilies = allowedFonts.ToArray();
+
+            //var fontFamilies = new[]
+            //{
+            //    new FontFamily("Times New Roman"),
+            //    new FontFamily("Arial"),
+            //    new FontFamily("Courier"),
+            //    FontFamily.GenericSansSerif,
+            //    FontFamily.GenericSerif
+            //};
+
+            var ruLang = await GenerateLanguage("RU-ru", MinFont, MaxFont, 'а', 'я', fontFamilies);
+            var enLang = await GenerateLanguage("EN-en", MinFont, MaxFont, 'a', 'z', fontFamilies);
             var specialChars = new[]
             {
                 '@',
@@ -224,7 +253,7 @@ namespace Qocr.Tester.Windows.ViewModels
                 '/',
                 '\\'
             };
-            var specialCharsResult = await _generator.GenerateSpecialChars(specialChars, minFont, maxFont, fontFamilies);
+            var specialCharsResult = await _generator.GenerateSpecialChars(specialChars, MinFont, MaxFont, fontFamilies);
 
             ruLang.FontFamilyNames = enLang.FontFamilyNames = fontFamilies.Select(font => font.Name).ToList();
 

@@ -66,7 +66,7 @@ namespace Qocr.Core.Recognition.Data
                 }
 
                 var offsetX = _sourceImageStartPoint.X + _minX;
-                var offsetY = _sourceImageStartPoint.X + _minY;
+                var offsetY = _sourceImageStartPoint.Y + _minY;
                 return new Point(offsetX, offsetY);
             }
         }

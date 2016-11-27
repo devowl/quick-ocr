@@ -50,6 +50,7 @@
                     <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal">
                         <TextBlock Text="Source image (or use Ctrl+V):" />
                         <Button Content="Open" Command="{Binding OpenSourceImageCommand}" />
+                        <Button Content="Analyze" Command="{Binding AnalyzeCommand}" />
                     </StackPanel>
                     <Image Grid.Row="1" Grid.ColumnSpan="2" Source="{Binding SourceImage}" VerticalAlignment="Stretch" />
                 </Grid>

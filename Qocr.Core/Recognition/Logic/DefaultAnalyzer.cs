@@ -42,12 +42,13 @@ namespace Qocr.Core.Recognition.Logic
         }
 
         /// <inheritdoc/>
-        public QAnalyzedSymbol Analyze(IMonomap monomap)
+        public QAnalyzedSymbol Analyze(QSymbol fragment)
         {
+            // Результат анализа всех букв !!! 
             var resultData = new List<QChar>();
 
-            var currentEuler = EulerCharacteristicComputer.Compute2D(monomap);
-
+            var currentEuler = EulerCharacteristicComputer.Compute2D(fragment.Monomap);
+            
             // Идём по всем языкам.
             foreach (var language in _container.Languages)
             {
@@ -55,18 +56,18 @@ namespace Qocr.Core.Recognition.Logic
                 foreach (var symbol in language.Chars)
                 {
                     QChar @char;
-                    resultData.Add(
-                        TryFind(symbol, currentEuler, monomap, out @char)
-                            ? @char
-                            : QChar.Unknown);
+                    if (TryFind(symbol, currentEuler, out @char))
+                    {
+                        // Не стоит пропускать проверку всех символов, так как стоит найти 3 и з цифро-буквы, либо аналоги А ру. и а англ.
+                        resultData.Add(@char);
+                    }
                 }
-                
             }
 
-            return new QAnalyzedSymbol(monomap, resultData);
+            return new QAnalyzedSymbol(fragment, resultData);
         }
 
-        private bool TryFind(Symbol symbol, EulerMonomap2D charEuler, IMonomap image, out QChar @char)
+        private bool TryFind(Symbol symbol, EulerMonomap2D charEuler, out QChar @char)
         {
             @char = null;
 
@@ -78,11 +79,11 @@ namespace Qocr.Core.Recognition.Logic
             }
 
             // TODO дорогое вычисление, пока тестовый вариант
-            var eulerDiff = symbol.Codes.ToDictionary(item => item.EulerCode.CompareTo(charEuler), item => item);
-            var minEulerDiffValue = eulerDiff.Keys.Min();
+            var minEulerDiffValue = symbol.Codes.Min(code => code.EulerCode.CompareTo(charEuler));
             if (minEulerDiffValue < _roundingPrecents)
             {
-                @char = new QChar(symbol.Chr, QState.Assumptions);
+                int probability = minEulerDiffValue;
+                @char = new QChar(symbol.Chr, QState.Assumptions, probability);
                 return true;
             }
 

@@ -25,8 +25,6 @@ namespace Qocr.Core.Recognition
 
         private readonly IScanner _scanner;
 
-        private readonly EulerContainer _container;
-
         /// <summary>
         /// Создание экземпляра класса <see cref="TextRecognizer"/>.
         /// </summary>
@@ -55,21 +53,17 @@ namespace Qocr.Core.Recognition
                 throw new ArgumentNullException(nameof(approximator));
             }
 
-            if (container != null)
-            {
-                _container = container;
-            }
-            else
+            if (container == null)
             {
                 using (var genEnRu = new MemoryStream(Resources.Gen))
                 {
-                    _container = CompressionUtils.Decompress<EulerContainer>(genEnRu);
+                    container = CompressionUtils.Decompress<EulerContainer>(genEnRu);
                 }
             }
 
             _approximator = approximator;
             _analyzer = analyzer ?? new DefaultAnalyzer(container);
-            _scanner = scanner;
+            _scanner = scanner ?? new DefaultScanner();
         }
 
         /// <summary>
@@ -94,17 +88,9 @@ namespace Qocr.Core.Recognition
             // Получаем все фрагменты изображения
             var fragments = _scanner.GetFragments(monomap);
 
-            var qSymbols = fragments.Select(fragment => _analyzer.Analyze(fragment.Monomap)).ToList();
+            var qSymbols = fragments.Select(fragment => _analyzer.Analyze(fragment)).ToList();
 
             return new QReport(qSymbols);
-        }
-
-        private void PrintMeFast(IMonomap m)
-        {
-            if (PrintTest != null)
-            {
-                PrintTest(m);
-            }
         }
     }
 }

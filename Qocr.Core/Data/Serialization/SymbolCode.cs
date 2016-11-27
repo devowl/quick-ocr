@@ -23,12 +23,12 @@ namespace Qocr.Core.Data.Serialization
         /// <summary>
         /// Размер шрифта.
         /// </summary>
-        public int FontSize { get; set; }
+        public int FontSize { get; }
 
         /// <summary>
         /// Значение эйлеровой характеристики.
         /// </summary>
-        public EulerMonomap2D EulerCode { get; set; }
+        public EulerMonomap2D EulerCode { get; }
 
         /// <inheritdoc/>
         public override int GetHashCode()

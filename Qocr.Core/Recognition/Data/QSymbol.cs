@@ -21,7 +21,7 @@ namespace Qocr.Core.Recognition.Data
         /// <summary>
         /// Ссылка на изображение.
         /// </summary>
-        public IMonomap Monomap { get; private set; }
+        public IMonomap Monomap { get; }
 
         /// <summary>
         /// Левая верхняя точка изображения.
