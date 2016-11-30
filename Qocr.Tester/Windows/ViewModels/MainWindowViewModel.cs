@@ -215,29 +215,29 @@ namespace Qocr.Tester.Windows.ViewModels
             const int MinFont = 8;
             const int MaxFont = 28;
 
-            List<FontFamily> allowedFonts = new List<FontFamily>();
-            foreach (var fontFamily in FontFamily.Families)
-            {
-                var tempFont = new Font(fontFamily, 15, FontStyle.Regular, GraphicsUnit.Pixel);
-                var preview = EulerGenerator.PrintChar('Ъ', tempFont);
-                CurrentGenImage = BitmapUtils.SourceFromBitmap(preview);
-
-                if (MessageBox.Show("Используем ?", "", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-                {
-                    allowedFonts.Add(fontFamily);
-                }
-            }
-
-            var fontFamilies = allowedFonts.ToArray();
-
-            //var fontFamilies = new[]
+            //List<FontFamily> allowedFonts = new List<FontFamily>();
+            //foreach (var fontFamily in FontFamily.Families)
             //{
-            //    new FontFamily("Times New Roman"),
-            //    new FontFamily("Arial"),
-            //    new FontFamily("Courier"),
-            //    FontFamily.GenericSansSerif,
-            //    FontFamily.GenericSerif
-            //};
+            //    var tempFont = new Font(fontFamily, 15, FontStyle.Regular, GraphicsUnit.Pixel);
+            //    var preview = EulerGenerator.PrintChar('Ъ', tempFont);
+            //    CurrentGenImage = BitmapUtils.SourceFromBitmap(preview);
+
+            //    if (MessageBox.Show("Используем ?", "", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            //    {
+            //        allowedFonts.Add(fontFamily);
+            //    }
+            //}
+
+            //var fontFamilies = allowedFonts.ToArray();
+
+            var fontFamilies = new[]
+            {
+                new FontFamily("Times New Roman"),
+                new FontFamily("Arial"),
+                new FontFamily("Courier"),
+                FontFamily.GenericSansSerif,
+                FontFamily.GenericSerif
+            };
 
             var ruLang = await GenerateLanguage("RU-ru", MinFont, MaxFont, 'а', 'я', fontFamilies);
             var enLang = await GenerateLanguage("EN-en", MinFont, MaxFont, 'a', 'z', fontFamilies);

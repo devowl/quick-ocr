@@ -30,7 +30,7 @@ namespace Qocr.Core.Data.Serialization
         /// </summary>
         public Symbol()
         {
-            Codes = new HashSet<SymbolCode>();
+            Codes = new List<SymbolCode>();
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace Qocr.Core.Data.Serialization
         /// Коды символа <see cref="Chr"/>.
         /// </summary>
         [IgnoreDataMember]
-        public HashSet<SymbolCode> Codes { get; set; }
+        public List<SymbolCode> Codes { get; set; }
 
         /// <summary>
         /// Строка из кодов.
@@ -61,14 +61,14 @@ namespace Qocr.Core.Data.Serialization
             Codes = GetData(StringsCodes);
         }
 
-        private static HashSet<SymbolCode> GetData(string sourceString)
+        private static List<SymbolCode> GetData(string sourceString)
         {
             var splitter = new[]
             {
                 Seporator
             };
 
-            var result = new HashSet<SymbolCode>();
+            var result = new List<SymbolCode>();
             foreach (
                 var symbolCode in
                     (sourceString ?? string.Empty).Split(splitter, StringSplitOptions.RemoveEmptyEntries)

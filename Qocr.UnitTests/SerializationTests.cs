@@ -63,14 +63,14 @@ namespace Qocr.UnitTests
         {
             var language = new Language
             {
-                LocalizationName = "RU-ru",
+                LocalizationName = "ru",
                 FontFamilyNames = new List<string>() { "SomeFont" },
                 Chars = new List<Symbol>
                 {
                     new Symbol
                     {
                         Chr = 'Б',
-                        Codes = new HashSet<SymbolCode>(
+                        Codes = new List<SymbolCode>(
                             new[]
                             {
                                 new SymbolCode(10, new EulerMonomap2D(EulerValue))

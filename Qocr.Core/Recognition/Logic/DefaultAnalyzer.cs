@@ -22,22 +22,25 @@ namespace Qocr.Core.Recognition.Logic
 
         private readonly EulerContainer _container;
 
+        private readonly IComparer<EulerMonomap2D> _comparer;
+
         private readonly int _roundingPrecents;
 
         /// <summary>
         /// Создание экземпляра класса <see cref="DefaultAnalyzer"/>.
         /// </summary>
         public DefaultAnalyzer(EulerContainer container)
-            : this(container, RoundingPercents)
+            : this(container, new DefaultEulerComparer(), RoundingPercents)
         {    
         }
 
         /// <summary>
         /// Создание экземпляра класса <see cref="DefaultAnalyzer"/>.
         /// </summary>
-        public DefaultAnalyzer(EulerContainer container, int roundingPrecents)
+        public DefaultAnalyzer(EulerContainer container, IComparer<EulerMonomap2D> comparer, int roundingPrecents)
         {
             _container = container;
+            _comparer = comparer;
             _roundingPrecents = roundingPrecents;
         }
 
@@ -79,7 +82,7 @@ namespace Qocr.Core.Recognition.Logic
             }
 
             // TODO дорогое вычисление, пока тестовый вариант
-            var minEulerDiffValue = symbol.Codes.Min(code => code.EulerCode.CompareTo(charEuler));
+            var minEulerDiffValue = symbol.Codes.Min(code => _comparer.Compare(charEuler, code.EulerCode));
             if (minEulerDiffValue < _roundingPrecents)
             {
                 int probability = minEulerDiffValue;

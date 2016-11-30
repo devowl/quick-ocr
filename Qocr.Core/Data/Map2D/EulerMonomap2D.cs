@@ -11,7 +11,7 @@ namespace Qocr.Core.Data.Map2D
     /// <summary>
     /// Эйлеровая характеристика для изображения.
     /// </summary>
-    public class EulerMonomap2D : IComparable
+    public class EulerMonomap2D
     {
         private int? _hashCode;
 
@@ -160,48 +160,22 @@ namespace Qocr.Core.Data.Map2D
         /// <inheritdoc/>
         public int SquareSize => 2;
 
-        /// <inheritdoc/>
         public override int GetHashCode()
         {
-            if (!_hashCode.HasValue)
-            {
-                _hashCode = S0 ^ S1 ^ S2 ^ S3 ^ S4 ^ S5 ^ S6 ^ S7 ^ S8 ^ S9 ^ S10 ^ S11 ^ S12 ^ S13 ^ S14;
-            }
-
-            return _hashCode.Value;
+            return base.GetHashCode();
         }
+
+        ///// <inheritdoc/>
+        //public override int GetHashCode()
+        //{
+        //    if (!_hashCode.HasValue)
+        //    {
+        //        _hashCode = S0 ^ S1 ^ S2 ^ S3 ^ S4 ^ S5 ^ S6 ^ S7 ^ S8 ^ S9 ^ S10 ^ S11 ^ S12 ^ S13 ^ S14;
+        //    }
+
+        //    return _hashCode.Value;
+        //}
         
-        /// <inheritdoc/>
-        public int CompareTo(object obj)
-        {
-            EulerMonomap2D objEuler = obj as EulerMonomap2D;
-            if (objEuler == null)
-            {
-                return int.MinValue;
-            }
-
-            // TODO 1. Надо по иному считать, учитывая размер.
-            // TODO 2. В Gen.bin НЕ ВСЕ буквы
-            var diffResult = 
-                Math.Abs(S0 - objEuler.S0) +
-                Math.Abs(S1 - objEuler.S1) +
-                Math.Abs(S2 - objEuler.S2) +
-                Math.Abs(S3 - objEuler.S3) +
-                Math.Abs(S4 - objEuler.S4) +
-                Math.Abs(S5 - objEuler.S5) +
-                Math.Abs(S6 - objEuler.S6) +
-                Math.Abs(S7 - objEuler.S7) +
-                Math.Abs(S8 - objEuler.S8) +
-                Math.Abs(S9 - objEuler.S9) +
-                Math.Abs(S10 - objEuler.S10) +
-                Math.Abs(S11 - objEuler.S11) +
-                Math.Abs(S12 - objEuler.S12) +
-                Math.Abs(S13 - objEuler.S13) +
-                Math.Abs(S14 - objEuler.S14);
-
-            return diffResult;
-        }
-
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {

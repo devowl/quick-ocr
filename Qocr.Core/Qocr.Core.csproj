@@ -75,6 +75,7 @@
     <Compile Include="Recognition\Data\QState.cs" />
     <Compile Include="Recognition\Data\QSymbol.cs" />
     <Compile Include="Recognition\EulerCharacteristicComputer.cs" />
+    <Compile Include="Recognition\Logic\DefaultEulerComparer.cs" />
     <Compile Include="Recognition\Logic\DefaultScanner.cs" />
     <Compile Include="Interfaces\IScanner.cs" />
     <Compile Include="Recognition\TextRecognizer.cs" />
