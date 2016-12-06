@@ -44,14 +44,14 @@ namespace Qocr.UnitTests
         }
 
         [TestMethod]
-        public void MalevichEuler()
+        public void HalfTaxiEuler()
         {
             IMonomap monomap = new BitMonomap(_bitImage);
             var euler = EulerCharacteristicComputer.Compute2D(monomap);
-            Assert.AreEqual(euler.S0, 0);
-            Assert.AreEqual(euler.S1, 0);
-            Assert.AreEqual(euler.S2, 0);
-            Assert.AreEqual(euler.S3, 0);
+            Assert.AreEqual(euler.S0, 2);
+            Assert.AreEqual(euler.S1, 2);
+            Assert.AreEqual(euler.S2, 2);
+            Assert.AreEqual(euler.S3, 2);
 
             Assert.AreEqual(euler.S4, 0);
             Assert.AreEqual(euler.S5, 0);

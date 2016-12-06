@@ -18,7 +18,7 @@ namespace Qocr.Core.Recognition.Data
 
         private bool[,] _padScape;
 
-        private Point _sourceImageStartPoint = Point.Empty;
+        private Point? _sourceImageStartPoint;
 
         private int _maxY;
 
@@ -65,8 +65,8 @@ namespace Qocr.Core.Recognition.Data
                     return Point.Empty;
                 }
 
-                var offsetX = _sourceImageStartPoint.X + _minX;
-                var offsetY = _sourceImageStartPoint.Y + _minY;
+                var offsetX = _sourceImageStartPoint.Value.X + _minX;
+                var offsetY = _sourceImageStartPoint.Value.Y + _minY;
                 return new Point(offsetX, offsetY);
             }
         }
@@ -83,13 +83,13 @@ namespace Qocr.Core.Recognition.Data
                     return Point.Empty;
                 }
 
-                var offsetX = _sourceImageStartPoint.X + _maxX;
-                var offsetY = _sourceImageStartPoint.X + _maxY;
+                var offsetX = _sourceImageStartPoint.Value.X + _maxX;
+                var offsetY = _sourceImageStartPoint.Value.Y + _maxY;
                 return new Point(offsetX, offsetY);
             }
         }
 
-        private bool IsPadClear => _sourceImageStartPoint == Point.Empty;
+        private bool IsPadClear => !_sourceImageStartPoint.HasValue;
 
         /// <inheritdoc/>
         public bool this[int x, int y] => GetValue(x, y);
@@ -106,8 +106,8 @@ namespace Qocr.Core.Recognition.Data
                 _sourceImageStartPoint = new Point(x, y);
             }
 
-            var offsetX = x - _sourceImageStartPoint.X;
-            var offsetY = y - _sourceImageStartPoint.Y;
+            var offsetX = x - _sourceImageStartPoint.Value.X;
+            var offsetY = y - _sourceImageStartPoint.Value.Y;
 
             if (offsetX > _maxX)
             {
@@ -138,7 +138,7 @@ namespace Qocr.Core.Recognition.Data
         public void ClearPad()
         {
             _padScape = new bool[_padWidth, _padHeight];
-            _sourceImageStartPoint = Point.Empty;
+            _sourceImageStartPoint = null;
             _maxY = _maxX = _minX = _minY = 0;
         }
 

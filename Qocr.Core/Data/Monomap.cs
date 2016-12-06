@@ -8,9 +8,7 @@ namespace Qocr.Core.Data
     /// </summary>
     public class Monomap : MonomapBase
     {
-        private readonly Color _blackColor;
-
-        private readonly Bitmap _image;
+        private readonly bool[,] _monoImage;
         
         /// <summary>
         /// Создание экземпляра класса <see cref="Monomap"/>.
@@ -22,8 +20,14 @@ namespace Qocr.Core.Data
                 throw new ArgumentNullException(nameof(image));
             }
 
-            _image = image;
-            _blackColor = blackColor;
+            _monoImage = new bool[image.Width, image.Height];
+            for (int x = 0; x < image.Width; x++)
+            {
+                for (int y = 0; y < image.Height; y++)
+                {
+                    _monoImage[x, y] = image.GetPixel(x, y) == blackColor;
+                }
+            }
         }
 
         /// <summary>
@@ -31,16 +35,15 @@ namespace Qocr.Core.Data
         /// </summary>
         public Monomap(Bitmap image) : this(image, Color.FromArgb(0, 0, 0))
         {
-            _image = image;
         }
 
         /// <inheritdoc/>
-        public override int Width => _image.Width;
+        public override int Width => _monoImage.GetLength(0);
 
         /// <inheritdoc/>
-        public override int Height => _image.Height;
+        public override int Height => _monoImage.GetLength(1);
 
         /// <inheritdoc/>
-        public override bool this[int x, int y] => _image.GetPixel(x, y) == _blackColor;
+        public override bool this[int x, int y] => _monoImage[x, y];
     }
 }

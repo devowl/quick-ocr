@@ -16,7 +16,7 @@ namespace Qocr.Core.Data.Map2D
         private int? _hashCode;
 
         private const string PropertyPrefix = "S";
-
+        
         /// <summary>
         /// Создание экземпляра класса <see cref="EulerMonomap2D"/>.
         /// </summary>
@@ -162,19 +162,21 @@ namespace Qocr.Core.Data.Map2D
 
         public override int GetHashCode()
         {
-            return base.GetHashCode();
+            if (!_hashCode.HasValue)
+            {
+                int hashCode = 13;
+                var allValues = new List<int> { S0, S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12, S13, S14 };
+                for (int i = 0; i < allValues.Count; i ++)
+                {
+                    var value = allValues[i];
+                    hashCode = hashCode * 13 + value.GetHashCode();
+                }
+
+                _hashCode = hashCode;
+            }
+
+            return _hashCode.Value;
         }
-
-        ///// <inheritdoc/>
-        //public override int GetHashCode()
-        //{
-        //    if (!_hashCode.HasValue)
-        //    {
-        //        _hashCode = S0 ^ S1 ^ S2 ^ S3 ^ S4 ^ S5 ^ S6 ^ S7 ^ S8 ^ S9 ^ S10 ^ S11 ^ S12 ^ S13 ^ S14;
-        //    }
-
-        //    return _hashCode.Value;
-        //}
         
         /// <inheritdoc/>
         public override bool Equals(object obj)

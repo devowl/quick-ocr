@@ -11,7 +11,7 @@ namespace Qocr.Core.Recognition.Data
     /// <summary>
     /// Вся информация о символе на изображении.
     /// </summary>
-    [DebuggerDisplay("{Char} - {StartPoint}")]
+    [DebuggerDisplay("{Char} - {StartPoint} - {State}")]
     public class QAnalyzedSymbol : QSymbol
     {
         /// <summary>
@@ -45,6 +45,17 @@ namespace Qocr.Core.Recognition.Data
                                     Chars.OrderBy(chr => chr.Probability).FirstOrDefault();
 
                 return firstCharData?.Char ?? Default;
+            }
+        }
+
+        /// <summary>
+        /// Наилучший результат распознания.
+        /// </summary>
+        public QState State
+        {
+            get
+            {
+                return Chars.Min(chr => chr.State);
             }
         }
     }

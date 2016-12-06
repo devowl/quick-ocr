@@ -50,6 +50,7 @@
     <Compile Include="Data\BitMonomap.cs" />
     <Compile Include="Recognition\Data\QReport.cs" />
     <Compile Include="Recognition\Data\QStyle.cs" />
+    <Compile Include="Recognition\Data\StretchPad.cs" />
     <Compile Include="Recognition\Logic\DefaultAnalyzer.cs" />
     <Compile Include="Recognition\Data\EditMonomap.cs" />
     <Compile Include="Data\Map2D\EulerMonomap2D.cs" />
@@ -86,6 +87,7 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

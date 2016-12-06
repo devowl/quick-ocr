@@ -4,6 +4,7 @@ using System.Linq;
 using Qocr.Core.Data.Attributes;
 using Qocr.Core.Data.Map2D;
 using Qocr.Core.Interfaces;
+using Qocr.Core.Recognition.Data;
 
 namespace Qocr.Core.Recognition
 {
@@ -41,14 +42,15 @@ namespace Qocr.Core.Recognition
             Dictionary<string, int> eulerValue = EulerSquares2D.ToDictionary(item => item.SquareIdent, item => 0);
             var fragment2DSize = 2;
 
-            for (int y = 0; y < imageSource.Height - fragment2DSize + 1; y++)
+            IMonomap stretchPad = new StretchPad(imageSource);
+            for (int y = 0; y < stretchPad.Height - fragment2DSize + 1; y++)
             {
-                for (int x = 0; x < imageSource.Width - fragment2DSize + 1; x++)
+                for (int x = 0; x < stretchPad.Width - fragment2DSize + 1; x++)
                 {
                     for (int i = 0; i < EulerSquares2D.Length; i++)
                     {
                         var eulerSquare = EulerSquares2D[i];
-                        if (eulerSquare.IsSquareDetected(x, y, imageSource))
+                        if (eulerSquare.IsSquareDetected(x, y, stretchPad))
                         {
                             eulerValue[eulerSquare.SquareIdent]++;
                             break;

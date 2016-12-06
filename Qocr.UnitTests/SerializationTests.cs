@@ -55,7 +55,7 @@ namespace Qocr.UnitTests
         public void SerializationValues6()
         {
             var symbol = CreateSymbol($"{_defaultCodeValue}{Symbol.Seporator}1,2,3,4,5,6,7,8,9{Symbol.SetSplitter}12");
-            Assert.AreEqual(symbol.Codes.Count, 2);
+            Assert.AreEqual(symbol.Codes.Count, 1);
         }
 
         [TestMethod]
@@ -63,14 +63,14 @@ namespace Qocr.UnitTests
         {
             var language = new Language
             {
-                LocalizationName = "ru",
+                LocalizationName = "RU-ru",
                 FontFamilyNames = new List<string>() { "SomeFont" },
                 Chars = new List<Symbol>
                 {
                     new Symbol
                     {
                         Chr = 'Б',
-                        Codes = new List<SymbolCode>(
+                        Codes = new HashSet<SymbolCode>(
                             new[]
                             {
                                 new SymbolCode(10, new EulerMonomap2D(EulerValue))

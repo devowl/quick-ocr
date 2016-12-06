@@ -133,5 +133,38 @@ namespace Qocr.UnitTests
             Assert.AreEqual(rb.X, 1001);
             Assert.AreEqual(rb.Y, 1001);
         }
+
+        [TestMethod]
+        public void StretchPadSizeTest()
+        {
+            BitmapPad pad = new BitmapPad();
+            pad.SetPoint(0, 0);
+
+            StretchPad stretchPad = new StretchPad(pad);
+
+            Assert.AreEqual(stretchPad.Height, 3);
+            Assert.AreEqual(stretchPad.Width, 3);
+        }
+
+        [TestMethod]
+        public void StretchPadContantTest()
+        {
+            BitmapPad pad = new BitmapPad();
+            pad.SetPoint(0, 0);
+
+            StretchPad stretchPad = new StretchPad(pad);
+
+            Assert.IsFalse(stretchPad[0, 0]);
+            Assert.IsFalse(stretchPad[1, 0]);
+            Assert.IsFalse(stretchPad[2, 0]);
+
+            Assert.IsFalse(stretchPad[0, 1]);
+            Assert.IsTrue(stretchPad[1, 1]);
+            Assert.IsFalse(stretchPad[2, 1]);
+
+            Assert.IsFalse(stretchPad[0, 2]);
+            Assert.IsFalse(stretchPad[1, 2]);
+            Assert.IsFalse(stretchPad[2, 2]);
+        }
     }
 }

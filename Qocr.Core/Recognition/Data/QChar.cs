@@ -1,8 +1,11 @@
-﻿namespace Qocr.Core.Recognition.Data
+﻿using System.Diagnostics;
+
+namespace Qocr.Core.Recognition.Data
 {
     /// <summary>
     /// Информация о распознаваемом символе.
     /// </summary>
+    [DebuggerDisplay("{Char} @ {Probability}")]
     public class QChar
     {
         /// <summary>

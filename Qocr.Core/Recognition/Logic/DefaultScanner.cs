@@ -64,9 +64,9 @@ namespace Qocr.Core.Recognition.Logic
             var result = new List<QSymbol>();
             var editMonomap = new EditMonomap(sourceImage);
 
-            for (int x = 0; x < editMonomap.Width; x++)
+            for (int y = 0; y < editMonomap.Height; y++)
             {
-                for (int y = 0; y < editMonomap.Height; y++)
+                for (int x = 0; x < editMonomap.Width; x++) 
                 {
                     if (editMonomap[x, y])
                     {

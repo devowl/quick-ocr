@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -64,9 +65,11 @@ namespace Qocr.Tester.Windows.ViewModels
 
         private void Analyze()
         {
+            // ИСПОЛЬЗУЙ Gen.bin
             TextRecognizer recognizer = new TextRecognizer();
             var bitmap = BitmapUtils.BitmapFromSource((BitmapSource)ApproximatedImage);
             var report = recognizer.Recognize(bitmap);
+            var len = report.Symbols.Count;
 
             //report.RawText()
         }
@@ -195,7 +198,7 @@ namespace Qocr.Tester.Windows.ViewModels
         {
             if (File.Exists("Gen.bin"))
             {
-                TestGen();
+                //TestGen();
                 if (MessageBox.Show("Файл Gen.bin существует, заменить ?", "Q?", MessageBoxButton.YesNo) ==
                     MessageBoxResult.No)
                 {
@@ -212,32 +215,19 @@ namespace Qocr.Tester.Windows.ViewModels
             DateTime dNow = DateTime.Now;
 
             EulerContainer container = new EulerContainer();
-            const int MinFont = 8;
+            const int MinFont = 7;
             const int MaxFont = 28;
 
-            //List<FontFamily> allowedFonts = new List<FontFamily>();
-            //foreach (var fontFamily in FontFamily.Families)
+            var fontFamilies = ManualChoose().ToArray();
+            
+            //var fontFamilies = new[]
             //{
-            //    var tempFont = new Font(fontFamily, 15, FontStyle.Regular, GraphicsUnit.Pixel);
-            //    var preview = EulerGenerator.PrintChar('Ъ', tempFont);
-            //    CurrentGenImage = BitmapUtils.SourceFromBitmap(preview);
-
-            //    if (MessageBox.Show("Используем ?", "", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-            //    {
-            //        allowedFonts.Add(fontFamily);
-            //    }
-            //}
-
-            //var fontFamilies = allowedFonts.ToArray();
-
-            var fontFamilies = new[]
-            {
-                new FontFamily("Times New Roman"),
-                new FontFamily("Arial"),
-                new FontFamily("Courier"),
-                FontFamily.GenericSansSerif,
-                FontFamily.GenericSerif
-            };
+            //    new FontFamily("Times New Roman"),
+            //    new FontFamily("Arial"),
+            //    new FontFamily("Courier"),
+            //    FontFamily.GenericSansSerif,
+            //    FontFamily.GenericSerif
+            //};
 
             var ruLang = await GenerateLanguage("RU-ru", MinFont, MaxFont, 'а', 'я', fontFamilies);
             var enLang = await GenerateLanguage("EN-en", MinFont, MaxFont, 'a', 'z', fontFamilies);
@@ -273,6 +263,114 @@ namespace Qocr.Tester.Windows.ViewModels
 
             _genStated = false;
             GenCommand.RaiseCanExecuteChanged();
+        }
+
+        private IEnumerable<FontFamily> ManualChoose()
+        {
+            const string LastSelectionsFileName = "LastFonts.txt";
+
+            if (File.Exists(LastSelectionsFileName))
+            {
+                if (
+                    MessageBox.Show(
+                        $"Файл {LastSelectionsFileName} существует. Использовать?",
+                        null,
+                        MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                {
+                    var lastFonts = File.ReadAllLines(LastSelectionsFileName);
+                    return lastFonts.Select(font => FontFamily.Families.First(f => f.Name == font)).ToArray();
+                }
+            }
+
+            List<FontFamily> allowedFonts = new List<FontFamily>();
+            foreach (var fontFamily in FontFamily.Families)
+            {
+                var tempFont = new Font(fontFamily, 10, FontStyle.Regular, GraphicsUnit.Pixel);
+                var preview = new[]
+                {
+                    EulerGenerator.PrintChar('А', tempFont),
+                    EulerGenerator.PrintChar('Ъ', tempFont),
+                    EulerGenerator.PrintChar('Ф', tempFont),
+                    EulerGenerator.PrintChar('Q', tempFont),
+                    EulerGenerator.PrintChar('W', tempFont),
+                    EulerGenerator.PrintChar('K', tempFont),
+
+                    EulerGenerator.PrintChar('а', tempFont),
+                    EulerGenerator.PrintChar('ъ', tempFont),
+                    EulerGenerator.PrintChar('ф', tempFont),
+                    EulerGenerator.PrintChar('q', tempFont),
+                    EulerGenerator.PrintChar('w', tempFont),
+                    EulerGenerator.PrintChar('k', tempFont),
+                };
+
+                CurrentGenImage = BitmapUtils.SourceFromBitmap(CombineBitmap(preview));
+
+                if (MessageBox.Show($"\"{fontFamily.Name}\" Используем ?", "", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                {
+                    allowedFonts.Add(fontFamily);
+                }
+            }
+
+            File.WriteAllLines(LastSelectionsFileName, allowedFonts.Select(font => font.Name));
+            return allowedFonts.ToArray();
+        }
+
+        public static System.Drawing.Bitmap CombineBitmap(params Bitmap[] bitmaps)
+        {
+            //read all images into memory
+            List<System.Drawing.Bitmap> images = new List<System.Drawing.Bitmap>();
+            System.Drawing.Bitmap finalImage = null;
+
+            try
+            {
+                int width = 0;
+                int height = 0;
+
+                foreach (Bitmap bitmap in bitmaps)
+                {
+                    //update the size of the final bitmap
+                    width += bitmap.Width;
+                    height = bitmap.Height > height ? bitmap.Height : height;
+
+                    images.Add(bitmap);
+                }
+
+                //create a bitmap to hold the combined image
+                finalImage = new System.Drawing.Bitmap(width, height);
+
+                //get a graphics object from the image so we can draw on it
+                using (System.Drawing.Graphics g = System.Drawing.Graphics.FromImage(finalImage))
+                {
+                    //set background color
+                    //g.Clear(System.Drawing.Color.Black);
+
+                    //go through each image and draw it on the final image
+                    int offset = 0;
+                    foreach (System.Drawing.Bitmap image in images)
+                    {
+                        g.DrawImage(image,
+                          new System.Drawing.Rectangle(offset, 0, image.Width, image.Height));
+                        offset += image.Width;
+                    }
+                }
+
+                return finalImage;
+            }
+            catch (Exception ex)
+            {
+                if (finalImage != null)
+                    finalImage.Dispose();
+
+                throw ex;
+            }
+            finally
+            {
+                //clean up memory
+                foreach (System.Drawing.Bitmap image in images)
+                {
+                    image.Dispose();
+                }
+            }
         }
 
         private async Task<Language> GenerateLanguage(string localization, int minFont, int maxFont, char startChr, char endChr, FontFamily[] fontFamilies)

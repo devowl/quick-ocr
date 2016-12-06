@@ -22,7 +22,7 @@ namespace Qocr.Core.Data.Serialization
         public List<Language> Languages { get; set; }
 
         /// <summary>
-        /// Набор спецсимволов.
+        /// Набор спецсимволо в.
         /// </summary>
         public List<Symbol> SpecialChars { get; set; }
     }

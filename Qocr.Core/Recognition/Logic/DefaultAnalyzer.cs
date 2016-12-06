@@ -59,7 +59,7 @@ namespace Qocr.Core.Recognition.Logic
                 foreach (var symbol in language.Chars)
                 {
                     QChar @char;
-                    if (TryFind(symbol, currentEuler, out @char))
+                    if (TryFind(symbol, currentEuler, fragment.Monomap, out @char))
                     {
                         // Не стоит пропускать проверку всех символов, так как стоит найти 3 и з цифро-буквы, либо аналоги А ру. и а англ.
                         resultData.Add(@char);
@@ -70,12 +70,12 @@ namespace Qocr.Core.Recognition.Logic
             return new QAnalyzedSymbol(fragment, resultData);
         }
 
-        private bool TryFind(Symbol symbol, EulerMonomap2D charEuler, out QChar @char)
+        private bool TryFind(Symbol symbol, EulerMonomap2D charEuler, IMonomap monomap, out QChar @char)
         {
             @char = null;
 
             // Если данный символ присутствует в базе знаний
-            if (symbol.Codes.Any(item => Equals(item.EulerCode, charEuler)))
+            if (symbol.Codes.Where(code => code.Height <= monomap.Height).Any(item => Equals(item.EulerCode, charEuler)))
             {
                 @char = new QChar(symbol.Chr, QState.Ok);
                 return true;

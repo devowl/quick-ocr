@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Xml.Serialization;
 
 using Qocr.Core.Data.Map2D;
@@ -8,22 +9,27 @@ namespace Qocr.Core.Data.Serialization
     /// <summary>
     /// Информация по каждому символу в <see cref="Symbol"/>.
     /// </summary>
-    [DebuggerDisplay("{FontSize}-{EulerCode}")]
+    [DebuggerDisplay("{Height}-{EulerCode}")]
     public class SymbolCode
     {
         /// <summary>
         /// Создание экземпляра класса <see cref="SymbolCode"/>.
         /// </summary>
-        public SymbolCode(int fontSize, EulerMonomap2D eulerCode)
+        public SymbolCode(int height, EulerMonomap2D eulerCode)
         {
+            if (height <= 0)
+            {
+                throw new ArgumentException(nameof(height));
+            }
+
             EulerCode = eulerCode;
-            FontSize = fontSize;
+            Height = height;
         }
         
         /// <summary>
         /// Размер шрифта.
         /// </summary>
-        public int FontSize { get; }
+        public int Height { get; }
 
         /// <summary>
         /// Значение эйлеровой характеристики.
@@ -33,7 +39,7 @@ namespace Qocr.Core.Data.Serialization
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return EulerCode.GetHashCode() ^ FontSize.GetHashCode();
+            return EulerCode.GetHashCode();
         }
 
         /// <inheritdoc/>

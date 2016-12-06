@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -9,6 +11,7 @@ using Qocr.Core.Data;
 using Qocr.Core.Data.Serialization;
 using Qocr.Core.Interfaces;
 using Qocr.Core.Recognition;
+using Qocr.Core.Utils;
 using Qocr.Generator.Data;
 
 namespace Qocr.Generator
@@ -122,6 +125,8 @@ namespace Qocr.Generator
                 });
         }
 
+        private object _saveLock = new object();
+
         private void InternalGenerateEulerValue(
             char[] sourceChars,
             Font font,
@@ -136,23 +141,61 @@ namespace Qocr.Generator
                     // TODO Что бы красиво выводить побуквенно идут по размерам каждой буквы, иначе тут лучше не вертикально а горизонтально по слою проходить
                     using (var newFont = new Font(font.FontFamily, size, font.Style, GraphicsUnit.Pixel))
                     {
-                        var bitmap = PrintChar(chr, newFont);
-                        IMonomap monomap = new Monomap(bitmap);
-                        var euler = EulerCharacteristicComputer.Compute2D(monomap);
-
-                        var chr1 = chr;
-                        Symbol symbol = symbols.First(s => s.Chr == chr1);
-                        SymbolCode symbolCode = new SymbolCode(size, euler);
-
-                        lock (_syncObject)
+                        using (var bitmap = PrintChar(chr, newFont))
                         {
-                            symbol.Codes.Add(symbolCode);
-                        }
+                            IMonomap monomap = new Monomap(bitmap);
+                            int height = GetFontHeight(monomap);
 
-                        BitmapCreated?.Invoke(this, new BitmapEventArgs((Bitmap)bitmap.Clone(), newFont, chr));
+                            if (height < minSize)
+                            {
+                                continue;
+                            }
+
+                            var euler = EulerCharacteristicComputer.Compute2D(monomap);
+
+                            var chr1 = chr;
+                            Symbol symbol = symbols.First(s => s.Chr == chr1);
+                            SymbolCode symbolCode = new SymbolCode(height, euler);
+
+                            lock (_syncObject)
+                            {
+                                symbol.Codes.Add(symbolCode);
+                            }
+
+                            BitmapCreated?.Invoke(this, new BitmapEventArgs((Bitmap)bitmap.Clone(), newFont, chr));
+                        }
                     }
                 }
             }
+        }
+
+        private int GetFontHeight(IMonomap monomap)
+        {
+            int topY = -1, bottomY = -1;
+
+            for (int y = 0; y < monomap.Height; y++)
+            {
+                for (int x = 0; x < monomap.Width; x++) 
+                {
+                    if (monomap[x, y])
+                    {
+                        topY = y;
+                    }
+                }
+            }
+
+            for (int y = monomap.Height - 1; y >= 0; y--)
+            {
+                for (int x = 0; x < monomap.Width; x++) 
+                {
+                    if (monomap[x, y])
+                    {
+                        bottomY = y;
+                    }
+                }
+            }
+            
+            return topY - bottomY + 1;
         }
     }
 }

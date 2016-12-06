@@ -29,15 +29,7 @@ namespace Qocr.Core.Data
 
             _imageCode = imageCode;
         }
-
-        /// <summary>
-        /// Создание экземпляра класса <see cref="BitMonomap"/>.
-        /// </summary>
-        public BitMonomap(bool[,] imageCode, Point point, int width, int height)
-        {
-            
-        }
-
+        
         /// <inheritdoc/>
         public override int Width => _imageCode.GetLength(0);
 

@@ -19,7 +19,7 @@ namespace Qocr.Core.Data.Serialization
         /// Разделитель всего сериализуемого значения.
         /// </summary>
         internal const string Seporator = ";";
-        
+
         /// <summary>
         /// Разделитель для свойств сериализуемого значения.
         /// </summary>
@@ -30,7 +30,7 @@ namespace Qocr.Core.Data.Serialization
         /// </summary>
         public Symbol()
         {
-            Codes = new List<SymbolCode>();
+            Codes = new HashSet<SymbolCode>();
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace Qocr.Core.Data.Serialization
         /// Коды символа <see cref="Chr"/>.
         /// </summary>
         [IgnoreDataMember]
-        public List<SymbolCode> Codes { get; set; }
+        public HashSet<SymbolCode> Codes { get; set; }
 
         /// <summary>
         /// Строка из кодов.
@@ -52,7 +52,7 @@ namespace Qocr.Core.Data.Serialization
         [OnSerializing]
         internal void OnSerializingMethod(StreamingContext context)
         {
-            StringsCodes = string.Join(Seporator, Codes.Select(code => $"{code.EulerCode}{SetSplitter}{code.FontSize}"));
+            StringsCodes = string.Join(Seporator, Codes.OrderBy(code => code.Height).Select(code => $"{code.EulerCode}{SetSplitter}{code.Height}"));
         }
 
         [OnDeserialized]
@@ -61,14 +61,14 @@ namespace Qocr.Core.Data.Serialization
             Codes = GetData(StringsCodes);
         }
 
-        private static List<SymbolCode> GetData(string sourceString)
+        private static HashSet<SymbolCode> GetData(string sourceString)
         {
             var splitter = new[]
             {
                 Seporator
             };
 
-            var result = new List<SymbolCode>();
+            var result = new HashSet<SymbolCode>();
             foreach (
                 var symbolCode in
                     (sourceString ?? string.Empty).Split(splitter, StringSplitOptions.RemoveEmptyEntries)
