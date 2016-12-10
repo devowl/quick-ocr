@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 
+using Qocr.Core.Data.Map2D;
 using Qocr.Core.Interfaces;
 
 namespace Qocr.Core.Recognition.Data
@@ -12,11 +13,19 @@ namespace Qocr.Core.Recognition.Data
         /// <summary>
         /// Создание экземпляра класса <see cref="QSymbol"/>.
         /// </summary>
-        public QSymbol(IMonomap monomap, Point startPoint)
+        public QSymbol(IMonomap monomap, Point startPoint, EulerMonomap2D euler)
         {
+            Euler = euler;
             Monomap = monomap;
             StartPoint = startPoint;
         }
+
+
+        /// <summary>
+        /// Значение эйлеровой характеристики.
+        /// </summary>
+        public EulerMonomap2D Euler { get; }
+
 
         /// <summary>
         /// Ссылка на изображение.

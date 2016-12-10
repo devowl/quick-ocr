@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 
+using Qocr.Core.Data.Map2D;
 using Qocr.Core.Interfaces;
 
 namespace Qocr.Core.Recognition.Data
@@ -23,7 +24,7 @@ namespace Qocr.Core.Recognition.Data
         /// Создание экземпляра класса <see cref="QAnalyzedSymbol"/>.
         /// </summary>
         public QAnalyzedSymbol(QSymbol sourceSymbol, IEnumerable<QChar> recognitionChars) 
-            : base(sourceSymbol.Monomap, sourceSymbol.StartPoint)
+            : base(sourceSymbol.Monomap, sourceSymbol.StartPoint, sourceSymbol.Euler)
         {
             recognitionChars = recognitionChars ?? Enumerable.Empty<QChar>();
             Chars = new ReadOnlyCollection<QChar>(recognitionChars.ToList());
@@ -55,7 +56,7 @@ namespace Qocr.Core.Recognition.Data
         {
             get
             {
-                return Chars.Min(chr => chr.State);
+                return Chars.Any() ? Chars.Min(chr => chr.State) : QState.Unknown;
             }
         }
     }

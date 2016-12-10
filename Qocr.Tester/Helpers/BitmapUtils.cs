@@ -33,6 +33,5 @@ namespace Qocr.Tester.Helpers
                            Int32Rect.Empty,
                            BitmapSizeOptions.FromEmptyOptions());
         }
-        
     }
 }

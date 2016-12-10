@@ -77,7 +77,7 @@ namespace Qocr.Core.Recognition.Logic
                         // Начинаем рекурсивное создание фигуры
                         FillBitmapPad(x, y, editMonomap, pad);
 
-                        var symbol = new QSymbol(pad, pad.TopLeftPoint);
+                        var symbol = new QSymbol(pad, pad.TopLeftPoint, EulerCharacteristicComputer.Compute2D(pad));
                         result.Add(symbol);
                     }
                 }

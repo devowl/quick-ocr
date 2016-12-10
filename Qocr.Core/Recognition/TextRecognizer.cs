@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -86,9 +87,22 @@ namespace Qocr.Core.Recognition
         {
             // TODO Там надо анализировать как то раздробленные картинки
             // Получаем все фрагменты изображения
-            var fragments = _scanner.GetFragments(monomap);
+            IList<QSymbol> fragments = _scanner.GetFragments(monomap);
+            List<QAnalyzedSymbol> qSymbols = new List<QAnalyzedSymbol>();
 
-            var qSymbols = fragments.Select(fragment => _analyzer.Analyze(fragment)).ToList();
+            foreach (var fragment in fragments)
+            {
+                var existingValue = qSymbols.FirstOrDefault(symbol => Equals(symbol.Euler, fragment.Euler));
+                if (existingValue == null)
+                {
+                    qSymbols.Add(_analyzer.Analyze(fragment));
+                }
+                else
+                {
+                    var analyzedSymbol = new QAnalyzedSymbol(fragment, existingValue.Chars);
+                    qSymbols.Add(analyzedSymbol);
+                }
+            }
 
             return new QReport(qSymbols);
         }

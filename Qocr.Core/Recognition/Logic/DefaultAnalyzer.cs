@@ -50,7 +50,7 @@ namespace Qocr.Core.Recognition.Logic
             // Результат анализа всех букв !!! 
             var resultData = new List<QChar>();
 
-            var currentEuler = EulerCharacteristicComputer.Compute2D(fragment.Monomap);
+            var currentEuler = fragment.Euler;
             
             // Идём по всем языкам.
             foreach (var language in _container.Languages)
@@ -61,6 +61,11 @@ namespace Qocr.Core.Recognition.Logic
                     QChar @char;
                     if (TryFind(symbol, currentEuler, fragment.Monomap, out @char))
                     {
+                        if (@char.State == QState.Ok)
+                        {
+                            return new QAnalyzedSymbol(fragment, new[] { @char });
+                        }
+
                         // Не стоит пропускать проверку всех символов, так как стоит найти 3 и з цифро-буквы, либо аналоги А ру. и а англ.
                         resultData.Add(@char);
                     }

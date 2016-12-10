@@ -129,6 +129,13 @@ namespace Qocr.Core.Recognition.Data
 
             var padX = _padCenterPoint.X + offsetX;
             var padY = _padCenterPoint.Y + offsetY;
+
+            if (padX < 0 || padX >= _padWidth || padY < 0 || padY >= _padHeight)
+            {
+                // Рисуем только то что попадает в пределы рабочей области
+                return;
+            }
+
             _padScape[padX, padY] = true;
         }
 
@@ -146,6 +153,13 @@ namespace Qocr.Core.Recognition.Data
         {
             var padX = x + _padCenterPoint.X - Math.Abs(_minX);
             var padY = y + _padCenterPoint.Y - Math.Abs(_minY);
+
+            if (padX < 0 || padX >= _padWidth || padY < 0 || padY >= _padHeight)
+            {
+                // Рисуем только то что попадает в пределы рабочей области
+                return false;
+            }
+
             return _padScape[padX, padY];
         }
     }

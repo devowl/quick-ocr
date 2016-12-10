@@ -82,6 +82,7 @@
     <Compile Include="Recognition\TextRecognizer.cs" />
     <Compile Include="Utils\ClassUtils.cs" />
     <Compile Include="Utils\MonomapExtentions.cs" />
+    <Compile Include="Utils\RecognitionVisualizerUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

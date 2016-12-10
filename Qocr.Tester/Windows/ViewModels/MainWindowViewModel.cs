@@ -71,6 +71,9 @@ namespace Qocr.Tester.Windows.ViewModels
             var report = recognizer.Recognize(bitmap);
             var len = report.Symbols.Count;
 
+            RecognitionVisualizerUtils.Visualize(bitmap, report);
+            ApproximatedImage = BitmapUtils.SourceFromBitmap(bitmap);
+
             //report.RawText()
         }
 
