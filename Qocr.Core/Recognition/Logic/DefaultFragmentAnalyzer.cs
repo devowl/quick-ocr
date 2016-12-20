@@ -13,36 +13,29 @@ namespace Qocr.Core.Recognition.Logic
     /// <summary>
     /// Анализатор изображения на наличие в нём символа, и распознание его.
     /// </summary>
-    public class DefaultAnalyzer : IAnalyzer
+    public class DefaultFragmentAnalyzer : IFragmentAnalyzer
     {
-        /// <summary>
-        /// Значение приближения значений, которое говорит о том что символ может являться данным изображением.
-        /// </summary>
-        private const int RoundingPercents = 0;
-
         private readonly EulerContainer _container;
 
         private readonly IEulerComparer _comparer;
-
-        private readonly int _roundingPrecents;
-
+        
         private readonly int _minimalHeight;
 
         /// <summary>
-        /// Создание экземпляра класса <see cref="DefaultAnalyzer"/>.
+        /// Создание экземпляра класса <see cref="DefaultFragmentAnalyzer"/>.
         /// </summary>
-        public DefaultAnalyzer(EulerContainer container) : this(container, new DefaultEulerComparer(), RoundingPercents)
+        public DefaultFragmentAnalyzer(EulerContainer container) 
+            : this(container, new DefaultEulerComparer())
         {
         }
 
         /// <summary>
-        /// Создание экземпляра класса <see cref="DefaultAnalyzer"/>.
+        /// Создание экземпляра класса <see cref="DefaultFragmentAnalyzer"/>.
         /// </summary>
-        public DefaultAnalyzer(EulerContainer container, IEulerComparer comparer, int roundingPrecents)
+        public DefaultFragmentAnalyzer(EulerContainer container, IEulerComparer comparer)
         {
             _container = container;
             _comparer = comparer;
-            _roundingPrecents = roundingPrecents;
             _minimalHeight =
                 _container.Languages.SelectMany(
                     language => language.Chars.SelectMany(chr => chr.Codes.Select(code => code.Height))).Min();
@@ -83,7 +76,7 @@ namespace Qocr.Core.Recognition.Logic
         /// <inheritdoc/>
         public QAnalyzedSymbol AnalyzeFragment(
             QSymbol currentFragment,
-            ICollection<QSymbol> unknownFragments,
+            IEnumerable<QSymbol> unknownFragments,
             IProducerConsumerCollection<QAnalyzedSymbol> recognizedSymbols)
         {
             /*
@@ -109,15 +102,6 @@ namespace Qocr.Core.Recognition.Logic
                     symbol =>
                         symbol.StartPoint.Y <= currentFragmentMinVector &&
                         currentFragmentMinVector <= symbol.StartPoint.Y + symbol.Height).ToArray();
-
-            //// Определяем средний размер символов в строке
-            //int currentLineHeight = -1;
-            //if (recognizedSymbols.Any())
-            //{
-            //    var groups = currentLineRecognizedChars.GroupBy(symbol => symbol.Height);
-            //    var groupDic = groups.ToDictionary(group => group.Count(), group => group.Key);
-            //    currentLineHeight = groupDic[groupDic.Keys.Max()];
-            //}
             
             Point bottomRightPoint;
             if (currentLineRecognizedChars.Any())
@@ -151,10 +135,6 @@ namespace Qocr.Core.Recognition.Logic
             if (TryFindSymbol(currentFragment, out analyzedSymbol))
             {
                 recognizedSymbols.TryAdd(analyzedSymbol);
-                foreach (var mergedFragment in mergedFragments)
-                {
-                    unknownFragments.Remove(mergedFragment);
-                }
 
                 // TODO Symbol стоит смержить, но после всех манипуляций!! Саму картинку
                 currentFragment = currentFragment;

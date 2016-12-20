@@ -31,6 +31,8 @@ namespace Qocr.Tester.Windows.ViewModels
 {
     public class MainWindowViewModel : NotificationObject
     {
+        public string _eulerValue;
+
         private readonly EulerGenerator _generator = new EulerGenerator();
 
         private ImageSource _approximatedImage;
@@ -120,7 +122,6 @@ namespace Qocr.Tester.Windows.ViewModels
             }
         }
 
-        public string _eulerValue;
         public string EulerValue
         {
             get
@@ -146,7 +147,9 @@ namespace Qocr.Tester.Windows.ViewModels
                 RaisePropertyChanged(() => ApproximatedImage);
                 if (value != null)
                 {
-                    EulerValue = EulerCharacteristicComputer.Compute2D(new Monomap(BitmapUtils.BitmapFromSource((BitmapSource)value))).ToString();
+                    EulerValue =
+                        EulerCharacteristicComputer.Compute2D(
+                            new Monomap(BitmapUtils.BitmapFromSource((BitmapSource)value))).ToString();
                 }
             }
         }
@@ -251,7 +254,8 @@ namespace Qocr.Tester.Windows.ViewModels
             DateTime nowRecognition = DateTime.Now;
             var bitmap = BitmapUtils.BitmapFromSource((BitmapSource)ApproximatedImage);
             var report = _recognizer.Recognize(bitmap);
-            MessageBox.Show($"Init time: {nowRecognition - nowInit}\n\rRecognition time: {DateTime.Now - nowRecognition}");
+            MessageBox.Show(
+                $"Init time: {nowRecognition - nowInit}\n\rRecognition time: {DateTime.Now - nowRecognition}");
 
             RecognitionVisualizerUtils.Visualize(bitmap, report);
             ApproximatedImage = BitmapUtils.SourceFromBitmap(bitmap);
@@ -296,7 +300,7 @@ namespace Qocr.Tester.Windows.ViewModels
                 ;
             }
         }
-        
+
         private async void GenStart()
         {
             if (File.Exists("Gen.bin"))
@@ -319,7 +323,7 @@ namespace Qocr.Tester.Windows.ViewModels
 
             EulerContainer container = new EulerContainer();
             const int MinFont = 8;
-            const int MaxFont = 20;
+            const int MaxFont = 25;
 
             var fontFamilies = ManualChoose().ToArray();
 
@@ -334,8 +338,8 @@ namespace Qocr.Tester.Windows.ViewModels
 
             _generator.BitmapCreated += GeneratorOnBitmapCreated;
 
-            var enLang = await GenerateLanguage("RU-ru", MinFont, MaxFont, 'а', 'я', fontFamilies);
-            //var enLang = await GenerateLanguage("EN-en", MinFont, MaxFont, 'a', 'z', fontFamilies);
+            //var enLang = await GenerateLanguage("RU-ru", MinFont, MaxFont, 'а', 'я', fontFamilies);
+            var enLang = await GenerateLanguage("EN-en", MinFont, MaxFont, 'a', 'z', fontFamilies);
             var specialChars = new[]
             {
                 '0',
@@ -359,10 +363,7 @@ namespace Qocr.Tester.Windows.ViewModels
                 '\\'
             };
 
-            
             var specialCharsResult = await _generator.GenerateSpecialChars(specialChars, MinFont, MaxFont, fontFamilies);
-
-            
 
             //ruLang.FontFamilyNames = 
             enLang.FontFamilyNames = fontFamilies.Select(font => font.Name).ToList();
@@ -405,20 +406,25 @@ namespace Qocr.Tester.Windows.ViewModels
             List<FontFamily> allowedFonts = new List<FontFamily>();
             foreach (var fontFamily in FontFamily.Families)
             {
-                var tempFont = new Font(fontFamily, 8, FontStyle.Regular, GraphicsUnit.Pixel);
+                var fontStyle = fontFamily.IsStyleAvailable(FontStyle.Regular)
+                    ? FontStyle.Regular
+                    : fontFamily.IsStyleAvailable(FontStyle.Italic) ? FontStyle.Italic : FontStyle.Bold;
+
+                var tempFont = new Font(fontFamily, 10, fontStyle, GraphicsUnit.Pixel);
                 var preview = new[]
                 {
-                    EulerGenerator.PrintChar('а', tempFont).ToBitmap(),
                     EulerGenerator.PrintChar('ъ', tempFont).ToBitmap(),
                     EulerGenerator.PrintChar('ф', tempFont).ToBitmap(),
                     EulerGenerator.PrintChar('е', tempFont).ToBitmap(),
-                    EulerGenerator.PrintChar('м', tempFont).ToBitmap(),
+                    
                     EulerGenerator.PrintChar('А', tempFont).ToBitmap(),
-                    EulerGenerator.PrintChar('Ы', tempFont).ToBitmap()
-                    //EulerGenerator.PrintChar('ф', tempFont),
-                    //EulerGenerator.PrintChar('q', tempFont),
-                    //EulerGenerator.PrintChar('w', tempFont),
-                    //EulerGenerator.PrintChar('k', tempFont),
+                    EulerGenerator.PrintChar('Ы', tempFont).ToBitmap(),
+                    EulerGenerator.PrintChar('ф', tempFont).ToBitmap(),
+                    EulerGenerator.PrintChar('у', tempFont).ToBitmap(),
+                    EulerGenerator.PrintChar('ю', tempFont).ToBitmap(),
+                    EulerGenerator.PrintChar('я', tempFont).ToBitmap(),
+                    EulerGenerator.PrintChar('а', tempFont).ToBitmap(),
+                    EulerGenerator.PrintChar('м', tempFont).ToBitmap(),
                 };
 
                 CurrentGenImage = BitmapUtils.SourceFromBitmap(CombineBitmap(preview));
@@ -484,6 +490,7 @@ namespace Qocr.Tester.Windows.ViewModels
                             }
 
                             var debugFileName = $"{fontName} {fontSize} {fontStyle}.png";
+
                             //bmp.Save(Path.Combine(chrDir, debugFileName), ImageFormat.Png);
 
                             CurrentGenImage = BitmapUtils.SourceFromBitmap(bmp);

@@ -22,7 +22,7 @@ namespace Qocr.Core.Recognition
     {
         private readonly IApproximator _approximator;
 
-        private readonly IAnalyzer _analyzer;
+        private readonly IFragmentAnalyzer _analyzer;
 
         private readonly IScanner _scanner;
 
@@ -48,7 +48,7 @@ namespace Qocr.Core.Recognition
         public TextRecognizer(
             IApproximator approximator,
             EulerContainer container,
-            IAnalyzer analyzer,
+            IFragmentAnalyzer analyzer,
             IScanner scanner)
         {
             if (approximator == null)
@@ -59,15 +59,10 @@ namespace Qocr.Core.Recognition
             if (container == null)
             {
                 throw new ArgumentNullException(nameof(container));
-
-                if (!container.Languages.Any())
-                {
-                    
-                }
             }
 
             _approximator = approximator;
-            _analyzer = analyzer ?? new DefaultAnalyzer(container);
+            _analyzer = analyzer ?? new DefaultFragmentAnalyzer(container);
             _scanner = scanner ?? new DefaultScanner();
         }
 
@@ -78,8 +73,7 @@ namespace Qocr.Core.Recognition
         /// <returns></returns>
         public QReport Recognize(Bitmap monomap)
         {
-            var appBitmap = _approximator.Approximate(monomap);
-            return Recognize(appBitmap);
+            return Recognize(_approximator.Approximate(monomap));
         }
 
         /// <summary>
@@ -128,42 +122,23 @@ namespace Qocr.Core.Recognition
 
 
             // Пункт 2.
-            foreach (var unknownFragment in unknownFragments.Where(fragment => fragment != null).ToArray())
-            {
-                if (recognizedSymbols.Contains(unknownFragment))
+            Parallel.ForEach(
+                unknownFragments.Where(fragment => fragment != null).ToArray(),
+                unknownFragment =>
                 {
-                    continue;
-                }
+                    if (recognizedSymbols.Contains(unknownFragment))
+                    {
+                        return;
+                    }
 
-                QAnalyzedSymbol analyzedSymbol = _analyzer.AnalyzeFragment(
-                    unknownFragment,
-                    unknownFragments,
-                    recognizedSymbols);
+                    QAnalyzedSymbol analyzedSymbol = _analyzer.AnalyzeFragment(
+                        unknownFragment,
+                        unknownFragments,
+                        recognizedSymbols);
 
-                recognizedSymbols.Add(analyzedSymbol);
-                unknownFragments.Remove(unknownFragment);
-            }
-
-            //// Пункт 2.
-            //Parallel.ForEach(
-            //    unknownFragments.ToArray(),
-            //    unknownFragment =>
-            //    {
-            //        if (recognizedSymbols.Contains(unknownFragment))
-            //        {
-            //            // TODO пока по нубски
-            //            return;
-            //        }
-
-            //        QAnalyzedSymbol analyzedSymbol = _analyzer.AnalyzeFragment(
-            //            unknownFragment,
-            //            unknownFragments,
-            //            recognizedSymbols);
-
-            //        recognizedSymbols.Add(analyzedSymbol);
-            //        unknownFragments.Remove(unknownFragment);
-            //    });
-
+                    recognizedSymbols.Add(analyzedSymbol);
+                });
+            
             return new QReport(recognizedSymbols.ToArray());
         }
     }

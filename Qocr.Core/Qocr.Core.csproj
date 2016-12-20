@@ -45,14 +45,14 @@
     <Compile Include="Approximation\LuminosityApproximator.cs" />
     <Compile Include="Data\Attributes\EulerPathAttribute.cs" />
     <Compile Include="Data\Serialization\SymbolCode.cs" />
-    <Compile Include="Interfaces\IAnalyzer.cs" />
+    <Compile Include="Interfaces\IFragmentAnalyzer.cs" />
     <Compile Include="Interfaces\IEulerComparer.cs" />
     <Compile Include="Data\BitmapPad.cs" />
     <Compile Include="Data\BitMonomap.cs" />
     <Compile Include="Recognition\Data\QReport.cs" />
     <Compile Include="Recognition\Data\QStyle.cs" />
     <Compile Include="Recognition\Data\StretchPad.cs" />
-    <Compile Include="Recognition\Logic\DefaultAnalyzer.cs" />
+    <Compile Include="Recognition\Logic\DefaultFragmentAnalyzer.cs" />
     <Compile Include="Data\EditMonomap.cs" />
     <Compile Include="Data\Map2D\EulerMonomap2D.cs" />
     <Compile Include="Data\Map2D\Square2D.cs" />
