@@ -59,15 +59,5 @@ namespace Qocr.Core.Properties {
                 resourceCulture = value;
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] Gen {
-            get {
-                object obj = ResourceManager.GetObject("Gen", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
     }
 }

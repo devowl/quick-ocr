@@ -5,8 +5,11 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 
+using Qocr.Core.Approximation;
 using Qocr.Core.Data;
 using Qocr.Core.Data.Serialization;
 using Qocr.Core.Interfaces;
@@ -30,20 +33,26 @@ namespace Qocr.Generator
         /// </summary>
         public event EventHandler<BitmapEventArgs> BitmapCreated;
 
-        public static Bitmap PrintChar(char chr, Font font)
+        private static LuminosityApproximator DefaultApproximator = new LuminosityApproximator();
+
+        public static IMonomap PrintChar(char chr, Font font)
         {
-            Bitmap bitmap = new Bitmap((int)font.Size + ImageBound * 2, (int)font.Size + ImageBound * 2);
+            using (Bitmap bitmap = new Bitmap((int)font.Size + ImageBound * 2, (int)font.Size + ImageBound * 2))
             using (Graphics graphics = Graphics.FromImage(bitmap))
             {
+                graphics.Clear(Color.White);
                 graphics.SmoothingMode = SmoothingMode.AntiAlias;
                 graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
                 graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.SingleBitPerPixelGridFit;
+                //graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.SingleBitPerPixelGridFit;
+                graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
                 graphics.DrawString(chr.ToString(), font, Brushes.Black, ImageBound, ImageBound);
                 graphics.Flush();
-            }
 
-            return bitmap;
+                bitmap.Save("1.png", ImageFormat.Png);
+
+                return DefaultApproximator.Approximate(bitmap);
+            }
         }
 
         public async Task<Language> GenerateLanguage(
@@ -107,7 +116,7 @@ namespace Qocr.Generator
 
             var styles = new[]
             {
-                FontStyle.Bold,
+                //FontStyle.Bold,
                 FontStyle.Regular,
                 FontStyle.Italic,
             };
@@ -141,29 +150,26 @@ namespace Qocr.Generator
                     // TODO Что бы красиво выводить побуквенно идут по размерам каждой буквы, иначе тут лучше не вертикально а горизонтально по слою проходить
                     using (var newFont = new Font(font.FontFamily, size, font.Style, GraphicsUnit.Pixel))
                     {
-                        using (var bitmap = PrintChar(chr, newFont))
+                        IMonomap monomap = PrintChar(chr, newFont);
+                        int height = GetFontHeight(monomap);
+
+                        if (height < minSize)
                         {
-                            IMonomap monomap = new Monomap(bitmap);
-                            int height = GetFontHeight(monomap);
-
-                            if (height < minSize)
-                            {
-                                continue;
-                            }
-
-                            var euler = EulerCharacteristicComputer.Compute2D(monomap);
-
-                            var chr1 = chr;
-                            Symbol symbol = symbols.First(s => s.Chr == chr1);
-                            SymbolCode symbolCode = new SymbolCode(height, euler);
-
-                            lock (_syncObject)
-                            {
-                                symbol.Codes.Add(symbolCode);
-                            }
-
-                            BitmapCreated?.Invoke(this, new BitmapEventArgs((Bitmap)bitmap.Clone(), newFont, chr));
+                            continue;
                         }
+
+                        var euler = EulerCharacteristicComputer.Compute2D(monomap);
+
+                        var chr1 = chr;
+                        Symbol symbol = symbols.First(s => s.Chr == chr1);
+                        SymbolCode symbolCode = new SymbolCode(height, euler);
+
+                        lock (_syncObject)
+                        {
+                            symbol.Codes.Add(symbolCode);
+                        }
+
+                        BitmapCreated?.Invoke(this, new BitmapEventArgs(monomap.ToBitmap(), newFont, chr));
                     }
                 }
             }

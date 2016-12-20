@@ -1,7 +1,6 @@
-﻿using Qocr.Core.Data;
-using Qocr.Core.Interfaces;
+﻿using Qocr.Core.Interfaces;
 
-namespace Qocr.Core.Recognition.Data
+namespace Qocr.Core.Data
 {
     /// <summary>
     /// Monomap с возможностью редактирования битов.

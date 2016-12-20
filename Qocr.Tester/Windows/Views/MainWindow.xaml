@@ -58,6 +58,7 @@
             <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
             <DockPanel Grid.Column="2">
                 <TextBlock Text="Approximated Image" DockPanel.Dock="Top" />
+                <TextBlock Text="{Binding EulerValue}" DockPanel.Dock="Top" />
                 <Image Source="{Binding ApproximatedImage}"/>
             </DockPanel>
         </Grid>

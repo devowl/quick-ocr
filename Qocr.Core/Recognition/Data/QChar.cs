@@ -1,11 +1,12 @@
 ﻿using System.Diagnostics;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Qocr.Core.Recognition.Data
 {
     /// <summary>
     /// Информация о распознаваемом символе.
     /// </summary>
-    [DebuggerDisplay("{Char} @ {Probability}")]
+    [DebuggerDisplay("{Char} @EulerEquals {EulerEquals} @Popularity {Popularity} @EulerRoundings {EulerRoundings}")]
     public class QChar
     {
         /// <summary>
@@ -17,25 +18,36 @@ namespace Qocr.Core.Recognition.Data
         /// Создание экземпляра класса <see cref="QChar"/>.
         /// </summary>
         public QChar(char chr, QState state)
-            : this(chr, state, 100)
+            : this(chr, state, 16, 16, int.MaxValue)
         {
-            
         }
 
         /// <summary>
         /// Создание экземпляра класса <see cref="QChar"/>.
         /// </summary>
-        public QChar(char chr, QState state, int probability)
+        public QChar(char chr, QState state, int eulerEquals, int eulerRoundings, int popularity)
         {
             State = state;
-            Probability = probability;
+            EulerEquals = eulerEquals;
+            EulerRoundings = eulerRoundings;
+            Popularity = popularity;
             Char = chr;
         }
+        
+        /// <summary>
+        /// Количество значений эйлеровых периодов, которые крайне близко лежат к образцу базы знаний.
+        /// </summary>
+        public int EulerRoundings { get; private set; }
 
         /// <summary>
-        /// Вероятность символа.
+        /// Количество периодов, полностью совпадающих.
         /// </summary>
-        public int Probability { get; private set; }
+        public int EulerEquals { get; private set; }
+
+        /// <summary>
+        /// Насколько часто в базе знаний встречаются для данного символа удовлетворяющих эвристики результатов
+        /// </summary>
+        public int Popularity { get; private set; }
 
         /// <summary>
         /// Статус распознания.

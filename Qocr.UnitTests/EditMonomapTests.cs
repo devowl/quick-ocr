@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using Qocr.Core.Data;
 using Qocr.Core.Recognition.Data;
 
 namespace Qocr.UnitTests

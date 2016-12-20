@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 using Qocr.Core.Approximation;
 using Qocr.Core.Data.Serialization;
@@ -18,8 +20,6 @@ namespace Qocr.Core.Recognition
     /// </summary>
     public class TextRecognizer
     {
-        public Action<IMonomap> PrintTest;
-
         private readonly IApproximator _approximator;
 
         private readonly IAnalyzer _analyzer;
@@ -29,14 +29,16 @@ namespace Qocr.Core.Recognition
         /// <summary>
         /// Создание экземпляра класса <see cref="TextRecognizer"/>.
         /// </summary>
-        public TextRecognizer() : this(new LuminosityApproximator(), null, null, null)
+        public TextRecognizer(EulerContainer container) 
+            : this(new LuminosityApproximator(), container, null, null)
         {
         }
 
         /// <summary>
         /// Создание экземпляра класса <see cref="TextRecognizer"/>.
         /// </summary>
-        public TextRecognizer(IApproximator approximator) : this(approximator, null, null, null)
+        public TextRecognizer(EulerContainer container, IApproximator approximator) 
+            : this(approximator, container, null, null)
         {
         }
 
@@ -56,9 +58,11 @@ namespace Qocr.Core.Recognition
 
             if (container == null)
             {
-                using (var genEnRu = new MemoryStream(Resources.Gen))
+                throw new ArgumentNullException(nameof(container));
+
+                if (!container.Languages.Any())
                 {
-                    container = CompressionUtils.Decompress<EulerContainer>(genEnRu);
+                    
                 }
             }
 
@@ -79,7 +83,7 @@ namespace Qocr.Core.Recognition
         }
 
         /// <summary>
-        /// Распознать.
+        /// Распознать <see cref="IMonomap"/>.
         /// </summary>
         /// <param name="monomap">Ссылка на <see cref="IMonomap"/>.</param>
         /// <returns></returns>
@@ -87,24 +91,80 @@ namespace Qocr.Core.Recognition
         {
             // TODO Там надо анализировать как то раздробленные картинки
             // Получаем все фрагменты изображения
-            IList<QSymbol> fragments = _scanner.GetFragments(monomap);
-            List<QAnalyzedSymbol> qSymbols = new List<QAnalyzedSymbol>();
+            IList<QSymbol> unknownFragments = _scanner.GetFragments(monomap);
+            var recognizedSymbols = new ConcurrentBag<QAnalyzedSymbol>();
 
-            foreach (var fragment in fragments)
+            /*
+             * Описываю алгоритм:
+             * 1. Распознаём все фрагмент которые 100% есть в базе
+             * 2. Идём по не распознанным фрагментам и если справа или слева есть распознанный, то берём высоту распознанного и захватываем вверх
+             * и вниз в 3 пикселя, если там есть фрагменты то плюсуем к фрагменту
+             */
+
+            // Пункт 1.
+            Parallel.ForEach(
+                unknownFragments.ToArray(),
+                unknownFragment =>
+                {
+                    var existingSymbol =
+                        recognizedSymbols.FirstOrDefault(
+                            symbol => symbol.Euler.GetHashCode() == unknownFragment.Euler.GetHashCode());
+
+                    if (existingSymbol == null)
+                    {
+                        QAnalyzedSymbol analyzedSymbol;
+                        if (_analyzer.TryFindSymbol(unknownFragment, out analyzedSymbol))
+                        {
+                            recognizedSymbols.Add(analyzedSymbol);
+                            unknownFragments.Remove(unknownFragment);
+                        }
+                    }
+                    else
+                    {
+                        var newSymbol = new QAnalyzedSymbol(unknownFragment, existingSymbol.Chars);
+                        recognizedSymbols.Add(newSymbol);
+                    }
+                });
+
+
+            // Пункт 2.
+            foreach (var unknownFragment in unknownFragments.Where(fragment => fragment != null).ToArray())
             {
-                var existingValue = qSymbols.FirstOrDefault(symbol => Equals(symbol.Euler, fragment.Euler));
-                if (existingValue == null)
+                if (recognizedSymbols.Contains(unknownFragment))
                 {
-                    qSymbols.Add(_analyzer.Analyze(fragment));
+                    continue;
                 }
-                else
-                {
-                    var analyzedSymbol = new QAnalyzedSymbol(fragment, existingValue.Chars);
-                    qSymbols.Add(analyzedSymbol);
-                }
+
+                QAnalyzedSymbol analyzedSymbol = _analyzer.AnalyzeFragment(
+                    unknownFragment,
+                    unknownFragments,
+                    recognizedSymbols);
+
+                recognizedSymbols.Add(analyzedSymbol);
+                unknownFragments.Remove(unknownFragment);
             }
 
-            return new QReport(qSymbols);
+            //// Пункт 2.
+            //Parallel.ForEach(
+            //    unknownFragments.ToArray(),
+            //    unknownFragment =>
+            //    {
+            //        if (recognizedSymbols.Contains(unknownFragment))
+            //        {
+            //            // TODO пока по нубски
+            //            return;
+            //        }
+
+            //        QAnalyzedSymbol analyzedSymbol = _analyzer.AnalyzeFragment(
+            //            unknownFragment,
+            //            unknownFragments,
+            //            recognizedSymbols);
+
+            //        recognizedSymbols.Add(analyzedSymbol);
+            //        unknownFragments.Remove(unknownFragment);
+            //    });
+
+            return new QReport(recognizedSymbols.ToArray());
         }
     }
 }

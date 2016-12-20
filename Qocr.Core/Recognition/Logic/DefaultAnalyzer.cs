@@ -1,7 +1,7 @@
-﻿using System;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
-using System.Runtime.CompilerServices;
 
 using Qocr.Core.Data.Map2D;
 using Qocr.Core.Data.Serialization;
@@ -18,84 +18,234 @@ namespace Qocr.Core.Recognition.Logic
         /// <summary>
         /// Значение приближения значений, которое говорит о том что символ может являться данным изображением.
         /// </summary>
-        private const int RoundingPercents = 5;
+        private const int RoundingPercents = 0;
 
         private readonly EulerContainer _container;
 
-        private readonly IComparer<EulerMonomap2D> _comparer;
+        private readonly IEulerComparer _comparer;
 
         private readonly int _roundingPrecents;
+
+        private readonly int _minimalHeight;
 
         /// <summary>
         /// Создание экземпляра класса <see cref="DefaultAnalyzer"/>.
         /// </summary>
-        public DefaultAnalyzer(EulerContainer container)
-            : this(container, new DefaultEulerComparer(), RoundingPercents)
-        {    
+        public DefaultAnalyzer(EulerContainer container) : this(container, new DefaultEulerComparer(), RoundingPercents)
+        {
         }
 
         /// <summary>
         /// Создание экземпляра класса <see cref="DefaultAnalyzer"/>.
         /// </summary>
-        public DefaultAnalyzer(EulerContainer container, IComparer<EulerMonomap2D> comparer, int roundingPrecents)
+        public DefaultAnalyzer(EulerContainer container, IEulerComparer comparer, int roundingPrecents)
         {
             _container = container;
             _comparer = comparer;
             _roundingPrecents = roundingPrecents;
+            _minimalHeight =
+                _container.Languages.SelectMany(
+                    language => language.Chars.SelectMany(chr => chr.Codes.Select(code => code.Height))).Min();
         }
 
         /// <inheritdoc/>
-        public QAnalyzedSymbol Analyze(QSymbol fragment)
+        public bool TryFindSymbol(QSymbol currentFragment, out QAnalyzedSymbol analyzedSymbol)
         {
-            // Результат анализа всех букв !!! 
-            var resultData = new List<QChar>();
-
-            var currentEuler = fragment.Euler;
-            
+            /*
+             * Поиск полного соответствия фрагмента символу базы знаний.
+             */
             // Идём по всем языкам.
             foreach (var language in _container.Languages)
             {
                 // Идём по всем буквам языка
-                foreach (var symbol in language.Chars)
+                foreach (var possibleSymbol in language.Chars)
+                {
+                    // Если данный символ присутствует в базе знаний
+                    if (
+                        possibleSymbol.Codes.Where(code => code.Height == currentFragment.Monomap.Height)
+                            .Any(item => item.EulerCode.GetHashCode() == currentFragment.Euler.GetHashCode()))
+                    {
+                        analyzedSymbol = new QAnalyzedSymbol(
+                            currentFragment,
+                            new[]
+                            {
+                                new QChar(possibleSymbol.Chr, QState.Ok)
+                            });
+                        return true;
+                    }
+                }
+            }
+
+            analyzedSymbol = null;
+            return false;
+        }
+
+        /// <inheritdoc/>
+        public QAnalyzedSymbol AnalyzeFragment(
+            QSymbol currentFragment,
+            ICollection<QSymbol> unknownFragments,
+            IProducerConsumerCollection<QAnalyzedSymbol> recognizedSymbols)
+        {
+            /*
+             * Алгоритм работы.
+             * P.S. Мы работаем со 100% не известным символом, либо фрагментом символа.
+             * 
+             
+            Input1: ip
+            Input2: Red Alert  
+                сначала будет R потом A затем l.
+                e, d будут подмяты затем на e, r будет сплющивание вектора
+
+            Input3: iiа  результат при анализе ii они сольются
+             */
+
+            // TODO Позже к высоте можно привязываться
+            const int DefaultSplitStep = 3;
+            var currentFragmentMinVector = currentFragment.StartPoint.Y + DefaultSplitStep;
+
+            // Распознанные символы, лежащие в диапазоне поиска
+            var currentLineRecognizedChars =
+                recognizedSymbols.Where(
+                    symbol =>
+                        symbol.StartPoint.Y <= currentFragmentMinVector &&
+                        currentFragmentMinVector <= symbol.StartPoint.Y + symbol.Height).ToArray();
+
+            //// Определяем средний размер символов в строке
+            //int currentLineHeight = -1;
+            //if (recognizedSymbols.Any())
+            //{
+            //    var groups = currentLineRecognizedChars.GroupBy(symbol => symbol.Height);
+            //    var groupDic = groups.ToDictionary(group => group.Count(), group => group.Key);
+            //    currentLineHeight = groupDic[groupDic.Keys.Max()];
+            //}
+            
+            Point bottomRightPoint;
+            if (currentLineRecognizedChars.Any())
+            {
+                // Минимальная нижняя точка для текущей линии для распознанных символов
+                var minLineY = currentFragment.StartPoint.Y +
+                           currentLineRecognizedChars.Min(symbol => symbol.StartPoint.Y + symbol.Height);
+
+                bottomRightPoint = new Point(
+                    currentFragment.StartPoint.X + currentFragment.Width,
+                    minLineY);
+            }
+            else
+            {
+                // Нижняя правая точка будет ширина фрагмента.
+                bottomRightPoint = new Point(
+                    currentFragment.StartPoint.X + currentFragment.Width,
+                    currentFragment.StartPoint.Y + currentFragment.Height + _minimalHeight);
+            }
+
+            // Мерджим фрагменты которые лежат в прямоугольнике fragment.StartPoint > ! > bottomRightPoint
+            IEnumerable<QSymbol> mergedFragments = unknownFragments.Where(
+                fragment => IsFragmentInsideSquare(fragment, currentFragment.StartPoint, bottomRightPoint))
+                .ToArray();
+
+            EulerMonomap2D currentEuler = EulerMonomap2D.Empty;
+            currentEuler = mergedFragments.Select(fragment => fragment.Euler)
+                .Aggregate(currentEuler, (current, mergedEuler) => current + mergedEuler);
+
+            QAnalyzedSymbol analyzedSymbol;
+            if (TryFindSymbol(currentFragment, out analyzedSymbol))
+            {
+                recognizedSymbols.TryAdd(analyzedSymbol);
+                foreach (var mergedFragment in mergedFragments)
+                {
+                    unknownFragments.Remove(mergedFragment);
+                }
+
+                // TODO Symbol стоит смержить, но после всех манипуляций!! Саму картинку
+                currentFragment = currentFragment;
+
+                return analyzedSymbol;
+            }
+
+            // Результат анализа всех букв !!! 
+            var resultData = new List<QChar>();
+
+            // Начинаем анализировать и искать похожие символы.
+            foreach (var language in _container.Languages)
+            {
+                // Идём по всем буквам языка
+                foreach (var possibleSymbol in language.Chars)
                 {
                     QChar @char;
-                    if (TryFind(symbol, currentEuler, fragment.Monomap, out @char))
+                    if (TryIntelliRecognition(
+                        possibleSymbol,
+                        currentEuler,
+                        bottomRightPoint.Y - currentFragment.StartPoint.Y,
+                        out @char) && @char.Popularity > _comparer.MinPopularity)
                     {
-                        if (@char.State == QState.Ok)
-                        {
-                            return new QAnalyzedSymbol(fragment, new[] { @char });
-                        }
-
                         // Не стоит пропускать проверку всех символов, так как стоит найти 3 и з цифро-буквы, либо аналоги А ру. и а англ.
                         resultData.Add(@char);
                     }
                 }
             }
 
-            return new QAnalyzedSymbol(fragment, resultData);
+            return new QAnalyzedSymbol(currentFragment, resultData);
         }
 
-        private bool TryFind(Symbol symbol, EulerMonomap2D charEuler, IMonomap monomap, out QChar @char)
+        private static bool IsFragmentInsideSquare(QSymbol fragment, Point leftTop, Point rightBottom)
+        {
+            // Признак того, что фрагмент лежит в прямоугольнике.
+            var rectangle1 = new Rectangle(
+                fragment.StartPoint.X,
+                fragment.StartPoint.Y,
+                fragment.Width,
+                fragment.Height);
+            var rectangle2 = new Rectangle(leftTop, new Size(rightBottom.X - leftTop.X, rightBottom.Y - leftTop.Y));
+            if (Rectangle.Intersect(rectangle1, rectangle2) == Rectangle.Empty)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool TryIntelliRecognition(
+            Symbol possibleSymbol,
+            EulerMonomap2D currentCharEuler,
+            int height,
+            out QChar @char)
         {
             @char = null;
 
-            // Если данный символ присутствует в базе знаний
-            if (symbol.Codes.Where(code => code.Height <= monomap.Height).Any(item => Equals(item.EulerCode, charEuler)))
-            {
-                @char = new QChar(symbol.Chr, QState.Ok);
-                return true;
-            }
-
             // TODO дорогое вычисление, пока тестовый вариант
-            var minEulerDiffValue = symbol.Codes.Min(code => _comparer.Compare(charEuler, code.EulerCode));
-            if (minEulerDiffValue < _roundingPrecents)
+            /*
+             * Анализировать:
+             * 1. Equals
+             * 2. -1 < X < 1
+             * 3. Количество совпадений в базе знаний что бы не опираться на косячный шрифт.
+             */
+            var possibleSybols = possibleSymbol.Codes.Select(
+                code =>
+                {
+                    int rounding, equals;
+                    _comparer.Compare(code.EulerCode, currentCharEuler, out rounding, out equals);
+                    return new { EulerEquals = equals, EulerRounding = rounding };
+                })
+
+                // TODO Как минимум половина набора совпадает (Стоит играться)
+                .Where(result => result.EulerEquals >= _comparer.RoundingLimit).ToArray();
+
+            if (!possibleSybols.Any())
             {
-                int probability = minEulerDiffValue;
-                @char = new QChar(symbol.Chr, QState.Assumptions, probability);
-                return true;
+                return false;
             }
 
-            return false;
+            var bestValue = possibleSybols[0];
+            foreach (var possibleSybol in possibleSybols)
+            {
+                if (possibleSybol.EulerRounding > bestValue.EulerRounding)
+                {
+                    bestValue = possibleSybol;
+                }
+            }
+
+            @char = new QChar(possibleSymbol.Chr, QState.Assumptions, bestValue.EulerEquals, bestValue.EulerRounding, possibleSybols.Length);
+            return true;
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Linq;
 
+using Qocr.Core.Data;
 using Qocr.Core.Interfaces;
 using Qocr.Core.Recognition.Data;
 

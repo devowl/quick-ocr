@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 using Qocr.Core.Data.Map2D;
+using Qocr.Core.Interfaces;
 
 namespace Qocr.Core.Recognition.Logic
 {
     /// <summary>
     /// Default equality comparer для <see cref="EulerMonomap2D"/>.
     /// </summary>
-    public class DefaultEulerComparer : IComparer<EulerMonomap2D>
+    public class DefaultEulerComparer : IEulerComparer
     {
         /// <summary>
         /// Создание экземпляра класса <see cref="DefaultEulerComparer"/>.
@@ -20,53 +19,49 @@ namespace Qocr.Core.Recognition.Logic
         }
 
         /// <inheritdoc/>
-        int IComparer<EulerMonomap2D>.Compare(EulerMonomap2D sourceMap, EulerMonomap2D right)
-        {
-            // TODO 1. Надо по иному считать, учитывая размер.
-            // TODO 2. В Gen.bin НЕ ВСЕ буквы
-            /*
-            var diffResult =
-                DiffCompute(sourceMap.S0, right.S0) +
-                DiffCompute(sourceMap.S1, right.S1) +
-                DiffCompute(sourceMap.S2, right.S2) +
-                DiffCompute(sourceMap.S3, right.S3) +
-                DiffCompute(sourceMap.S4, right.S4) +
-                DiffCompute(sourceMap.S5, right.S5) +
-                DiffCompute(sourceMap.S6, right.S6) +
-                DiffCompute(sourceMap.S7, right.S7) +
-                DiffCompute(sourceMap.S8, right.S8) +
-                DiffCompute(sourceMap.S9, right.S9) +
-                DiffCompute(sourceMap.S10, right.S10) +
-                DiffCompute(sourceMap.S11, right.S11) +
-                DiffCompute(sourceMap.S12, right.S12) +
-                DiffCompute(sourceMap.S13, right.S13) +
-                DiffCompute(sourceMap.S14, right.S14);
-            */
-            var diffResult = new [] 
-            {
-                DiffCompute(sourceMap.S0, right.S0),
-                DiffCompute(sourceMap.S1, right.S1),
-                DiffCompute(sourceMap.S2, right.S2),
-                DiffCompute(sourceMap.S3, right.S3),
-                DiffCompute(sourceMap.S4, right.S4),
-                DiffCompute(sourceMap.S5, right.S5),
-                DiffCompute(sourceMap.S6, right.S6),
-                DiffCompute(sourceMap.S7, right.S7),
-                DiffCompute(sourceMap.S8, right.S8),
-                DiffCompute(sourceMap.S9, right.S9),
-                DiffCompute(sourceMap.S10, right.S10),
-                DiffCompute(sourceMap.S11, right.S11),
-                DiffCompute(sourceMap.S12, right.S12),
-                DiffCompute(sourceMap.S13, right.S13),
-                DiffCompute(sourceMap.S14, right.S14),
-            };
+        public int MinPopularity => 3;
 
-            return diffResult.Length - diffResult.Where(diff => diff == 0).Count();
+        /// <inheritdoc/>
+        public int RoundingLimit => 3;
+
+        private void ComputeDiff(int source, int comp, ref int rounding, ref int equals)
+        {
+            var diff = source - comp;
+            if (diff == 0)
+            {
+                equals++;
+                rounding++;
+            }
+            else if (-1 <= diff && diff <= 1)
+            {
+                rounding++;
+            }
         }
 
-        private int DiffCompute(int s1, int s2)
+        /// <inheritdoc/>
+        void IEulerComparer.Compare(EulerMonomap2D euler1, EulerMonomap2D euler2, out int rounding, out int equals)
         {
-            return Math.Abs(s1 - s2);
+            // Количество очень близких значений в интервале
+            rounding = 0;
+
+            // Количество полных совпадений
+            equals = 0;
+
+            //ComputeDiff(euler1.S0, euler2.S0, ref rounding, ref equals);
+            //ComputeDiff(euler1.S1, euler2.S1, ref rounding, ref equals);
+            //ComputeDiff(euler1.S2, euler2.S2, ref rounding, ref equals);
+            //ComputeDiff(euler1.S3, euler2.S3, ref rounding, ref equals);
+            //ComputeDiff(euler1.S4, euler2.S4, ref rounding, ref equals);
+            //ComputeDiff(euler1.S5, euler2.S5, ref rounding, ref equals);
+            //ComputeDiff(euler1.S6, euler2.S6, ref rounding, ref equals);
+            //ComputeDiff(euler1.S7, euler2.S7, ref rounding, ref equals);
+            ComputeDiff(euler1.S8, euler2.S8, ref rounding, ref equals);
+            ComputeDiff(euler1.S9, euler2.S9, ref rounding, ref equals);
+            ComputeDiff(euler1.S10, euler2.S10, ref rounding, ref equals);
+            ComputeDiff(euler1.S11, euler2.S11, ref rounding, ref equals);
+            ComputeDiff(euler1.S12, euler2.S12, ref rounding, ref equals); 
+            ComputeDiff(euler1.S13, euler2.S13, ref rounding, ref equals);
+            //ComputeDiff(euler1.S14, euler2.S14, ref rounding, ref equals);
         }
     }
 }

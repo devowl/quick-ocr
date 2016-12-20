@@ -3,7 +3,7 @@ using System.Drawing;
 
 using Qocr.Core.Interfaces;
 
-namespace Qocr.Core.Recognition.Data
+namespace Qocr.Core.Data
 {
     /// <summary>
     /// Черновик изображения.

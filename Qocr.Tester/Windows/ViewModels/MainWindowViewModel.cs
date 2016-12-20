@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -16,6 +15,7 @@ using Microsoft.Practices.Prism.ViewModel;
 using Microsoft.Win32;
 
 using Qocr.Core.Approximation;
+using Qocr.Core.Data;
 using Qocr.Core.Data.Serialization;
 using Qocr.Core.Interfaces;
 using Qocr.Core.Recognition;
@@ -31,27 +31,25 @@ namespace Qocr.Tester.Windows.ViewModels
 {
     public class MainWindowViewModel : NotificationObject
     {
+        private readonly EulerGenerator _generator = new EulerGenerator();
+
         private ImageSource _approximatedImage;
 
         private ImageSource _sourceImage;
 
-        private readonly EulerGenerator _generator = new EulerGenerator();
-
         private bool _genStated;
-
-        private void TestGen()
-        {
-            using (FileStream fileStream = new FileStream("Gen.bin", FileMode.Open))
-            {
-                var container = CompressionUtils.Decompress<EulerContainer>(fileStream);
-            }
-        }
 
         private bool _isPastProcessing;
 
         private ImageSource _currentGenImage;
 
         private Font _currentFont;
+
+        private int debugCount = 0;
+
+        private int _genImageNumber = 0;
+
+        private TextRecognizer _recognizer;
 
         public MainWindowViewModel()
         {
@@ -60,43 +58,8 @@ namespace Qocr.Tester.Windows.ViewModels
             ImagePastCommand = new DelegateCommand(ImagePast);
             GenCommand = new DelegateCommand(GenStart, CanGen);
             TestCommand = new DelegateCommand(Test);
+
             //_generator.BitmapCreated += GeneratorOnBitmapCreated;
-        }
-
-        private void Analyze()
-        {
-            // ИСПОЛЬЗУЙ Gen.bin
-            TextRecognizer recognizer = new TextRecognizer();
-            var bitmap = BitmapUtils.BitmapFromSource((BitmapSource)ApproximatedImage);
-            var report = recognizer.Recognize(bitmap);
-            var len = report.Symbols.Count;
-
-            RecognitionVisualizerUtils.Visualize(bitmap, report);
-            ApproximatedImage = BitmapUtils.SourceFromBitmap(bitmap);
-
-            //report.RawText()
-        }
-
-        private void Test()
-        {
-            var debugFolder = new DirectoryInfo(@"BmpDebug");
-            foreach (var file in debugFolder.GetFiles())
-            {
-                file.Delete();
-            }
-
-            TextRecognizer recognizer = new TextRecognizer();
-            var bm = (Bitmap)Image.FromFile("MiniTest.png");
-            recognizer.PrintTest = PrintTest;
-            var q= recognizer.Recognize(bm);
-        }
-
-        private int debugCount = 0;
-        private void PrintTest(IMonomap monomap)
-        {
-
-            monomap.ToBitmap().Save($"BmpDebug\\{debugCount}.png", ImageFormat.Png);
-            debugCount ++;
         }
 
         public Font CurrentFont
@@ -157,6 +120,20 @@ namespace Qocr.Tester.Windows.ViewModels
             }
         }
 
+        public string _eulerValue;
+        public string EulerValue
+        {
+            get
+            {
+                return _eulerValue;
+            }
+            set
+            {
+                _eulerValue = value;
+                RaisePropertyChanged(() => EulerValue);
+            }
+        }
+
         public ImageSource ApproximatedImage
         {
             get
@@ -167,11 +144,15 @@ namespace Qocr.Tester.Windows.ViewModels
             {
                 _approximatedImage = value;
                 RaisePropertyChanged(() => ApproximatedImage);
+                if (value != null)
+                {
+                    EulerValue = EulerCharacteristicComputer.Compute2D(new Monomap(BitmapUtils.BitmapFromSource((BitmapSource)value))).ToString();
+                }
             }
         }
 
         public DelegateCommand TestCommand { get; private set; }
-        
+
         public DelegateCommand GenCommand { get; private set; }
 
         public DelegateCommand ImagePastCommand { get; private set; }
@@ -179,6 +160,123 @@ namespace Qocr.Tester.Windows.ViewModels
         public DelegateCommand OpenSourceImageCommand { get; private set; }
 
         public DelegateCommand AnalyzeCommand { get; private set; }
+
+        public static System.Drawing.Bitmap CombineBitmap(params Bitmap[] bitmaps)
+        {
+            //read all images into memory
+            List<System.Drawing.Bitmap> images = new List<System.Drawing.Bitmap>();
+            System.Drawing.Bitmap finalImage = null;
+
+            try
+            {
+                int width = 0;
+                int height = 0;
+
+                foreach (Bitmap bitmap in bitmaps)
+                {
+                    //update the size of the final bitmap
+                    width += bitmap.Width;
+                    height = bitmap.Height > height ? bitmap.Height : height;
+
+                    images.Add(bitmap);
+                }
+
+                //create a bitmap to hold the combined image
+                finalImage = new System.Drawing.Bitmap(width, height);
+
+                //get a graphics object from the image so we can draw on it
+                using (System.Drawing.Graphics g = System.Drawing.Graphics.FromImage(finalImage))
+                {
+                    //set background color
+                    //g.Clear(System.Drawing.Color.Black);
+
+                    //go through each image and draw it on the final image
+                    int offset = 0;
+                    foreach (System.Drawing.Bitmap image in images)
+                    {
+                        g.DrawImage(image, new System.Drawing.Rectangle(offset, 0, image.Width, image.Height));
+                        offset += image.Width;
+                    }
+                }
+
+                return finalImage;
+            }
+            catch (Exception ex)
+            {
+                if (finalImage != null)
+                {
+                    finalImage.Dispose();
+                }
+
+                throw ex;
+            }
+            finally
+            {
+                //clean up memory
+                foreach (System.Drawing.Bitmap image in images)
+                {
+                    image.Dispose();
+                }
+            }
+        }
+
+        private static ImageSource IconToImageSource(Icon icon)
+        {
+            var imageSource = Imaging.CreateBitmapSourceFromHIcon(
+                icon.Handle,
+                Int32Rect.Empty,
+                BitmapSizeOptions.FromEmptyOptions());
+
+            return imageSource;
+        }
+
+        private EulerContainer GetEulerContainer(string path)
+        {
+            using (var english = File.Open(path, FileMode.Open))
+            {
+                return CompressionUtils.Decompress<EulerContainer>(english);
+            }
+        }
+
+        private void Analyze()
+        {
+            //var dic = GetEulerContainer(@"..\..\..\Qocr.Dics\RU-ru.bin");
+            var dic = GetEulerContainer(@"..\..\..\Qocr.Dics\EN-en.bin");
+
+            DateTime nowInit = DateTime.Now;
+
+            // ИСПОЛЬЗУЙ Gen.bin
+            _recognizer = _recognizer ?? new TextRecognizer(dic);
+
+            DateTime nowRecognition = DateTime.Now;
+            var bitmap = BitmapUtils.BitmapFromSource((BitmapSource)ApproximatedImage);
+            var report = _recognizer.Recognize(bitmap);
+            MessageBox.Show($"Init time: {nowRecognition - nowInit}\n\rRecognition time: {DateTime.Now - nowRecognition}");
+
+            RecognitionVisualizerUtils.Visualize(bitmap, report);
+            ApproximatedImage = BitmapUtils.SourceFromBitmap(bitmap);
+        }
+
+        private void Test()
+        {
+            //var debugFolder = new DirectoryInfo(@"BmpDebug");
+            //foreach (var file in debugFolder.GetFiles())
+            //{
+            //    file.Delete();
+            //}
+
+            //TextRecognizer recognizer = new TextRecognizer();
+            //var bm = (Bitmap)Image.FromFile("MiniTest.png");
+
+            //// recognizer.PrintTest = PrintTest;
+            //var q = recognizer.Recognize(bm);
+        }
+
+        private void PrintTest(IMonomap monomap)
+        {
+            monomap.ToBitmap().Save($"BmpDebug\\{debugCount}.png", ImageFormat.Png);
+            debugCount ++;
+        }
 
         private bool CanGen()
         {
@@ -193,10 +291,12 @@ namespace Qocr.Tester.Windows.ViewModels
             }
 
             Directory.CreateDirectory("BmpDebug");
-            while (!Directory.Exists("BmpDebug")) ;
+            while (!Directory.Exists("BmpDebug"))
+            {
+                ;
+            }
         }
-
-
+        
         private async void GenStart()
         {
             if (File.Exists("Gen.bin"))
@@ -208,7 +308,7 @@ namespace Qocr.Tester.Windows.ViewModels
                     return;
                 }
             }
-            
+
             _genStated = true;
             GenCommand.RaiseCanExecuteChanged();
             _genImageNumber = 0;
@@ -218,11 +318,11 @@ namespace Qocr.Tester.Windows.ViewModels
             DateTime dNow = DateTime.Now;
 
             EulerContainer container = new EulerContainer();
-            const int MinFont = 7;
-            const int MaxFont = 28;
+            const int MinFont = 8;
+            const int MaxFont = 20;
 
             var fontFamilies = ManualChoose().ToArray();
-            
+
             //var fontFamilies = new[]
             //{
             //    new FontFamily("Times New Roman"),
@@ -232,10 +332,22 @@ namespace Qocr.Tester.Windows.ViewModels
             //    FontFamily.GenericSerif
             //};
 
-            var ruLang = await GenerateLanguage("RU-ru", MinFont, MaxFont, 'а', 'я', fontFamilies);
-            var enLang = await GenerateLanguage("EN-en", MinFont, MaxFont, 'a', 'z', fontFamilies);
+            _generator.BitmapCreated += GeneratorOnBitmapCreated;
+
+            var enLang = await GenerateLanguage("RU-ru", MinFont, MaxFont, 'а', 'я', fontFamilies);
+            //var enLang = await GenerateLanguage("EN-en", MinFont, MaxFont, 'a', 'z', fontFamilies);
             var specialChars = new[]
             {
+                '0',
+                '1',
+                '2',
+                '3',
+                '4',
+                '5',
+                '6',
+                '7',
+                '8',
+                '9',
                 '@',
                 '$',
                 '#',
@@ -246,11 +358,16 @@ namespace Qocr.Tester.Windows.ViewModels
                 '/',
                 '\\'
             };
+
+            
             var specialCharsResult = await _generator.GenerateSpecialChars(specialChars, MinFont, MaxFont, fontFamilies);
 
-            ruLang.FontFamilyNames = enLang.FontFamilyNames = fontFamilies.Select(font => font.Name).ToList();
+            
 
-            container.Languages.Add(ruLang);
+            //ruLang.FontFamilyNames = 
+            enLang.FontFamilyNames = fontFamilies.Select(font => font.Name).ToList();
+
+            //container.Languages.Add(ruLang);
             container.Languages.Add(enLang);
             container.SpecialChars = specialCharsResult;
 
@@ -288,27 +405,26 @@ namespace Qocr.Tester.Windows.ViewModels
             List<FontFamily> allowedFonts = new List<FontFamily>();
             foreach (var fontFamily in FontFamily.Families)
             {
-                var tempFont = new Font(fontFamily, 10, FontStyle.Regular, GraphicsUnit.Pixel);
+                var tempFont = new Font(fontFamily, 8, FontStyle.Regular, GraphicsUnit.Pixel);
                 var preview = new[]
                 {
-                    EulerGenerator.PrintChar('А', tempFont),
-                    EulerGenerator.PrintChar('Ъ', tempFont),
-                    EulerGenerator.PrintChar('Ф', tempFont),
-                    EulerGenerator.PrintChar('Q', tempFont),
-                    EulerGenerator.PrintChar('W', tempFont),
-                    EulerGenerator.PrintChar('K', tempFont),
-
-                    EulerGenerator.PrintChar('а', tempFont),
-                    EulerGenerator.PrintChar('ъ', tempFont),
-                    EulerGenerator.PrintChar('ф', tempFont),
-                    EulerGenerator.PrintChar('q', tempFont),
-                    EulerGenerator.PrintChar('w', tempFont),
-                    EulerGenerator.PrintChar('k', tempFont),
+                    EulerGenerator.PrintChar('а', tempFont).ToBitmap(),
+                    EulerGenerator.PrintChar('ъ', tempFont).ToBitmap(),
+                    EulerGenerator.PrintChar('ф', tempFont).ToBitmap(),
+                    EulerGenerator.PrintChar('е', tempFont).ToBitmap(),
+                    EulerGenerator.PrintChar('м', tempFont).ToBitmap(),
+                    EulerGenerator.PrintChar('А', tempFont).ToBitmap(),
+                    EulerGenerator.PrintChar('Ы', tempFont).ToBitmap()
+                    //EulerGenerator.PrintChar('ф', tempFont),
+                    //EulerGenerator.PrintChar('q', tempFont),
+                    //EulerGenerator.PrintChar('w', tempFont),
+                    //EulerGenerator.PrintChar('k', tempFont),
                 };
 
                 CurrentGenImage = BitmapUtils.SourceFromBitmap(CombineBitmap(preview));
 
-                if (MessageBox.Show($"\"{fontFamily.Name}\" Используем ?", "", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                if (MessageBox.Show($"\"{fontFamily.Name}\" Используем ?", "", MessageBoxButton.YesNo) ==
+                    MessageBoxResult.Yes)
                 {
                     allowedFonts.Add(fontFamily);
                 }
@@ -318,86 +434,23 @@ namespace Qocr.Tester.Windows.ViewModels
             return allowedFonts.ToArray();
         }
 
-        public static System.Drawing.Bitmap CombineBitmap(params Bitmap[] bitmaps)
-        {
-            //read all images into memory
-            List<System.Drawing.Bitmap> images = new List<System.Drawing.Bitmap>();
-            System.Drawing.Bitmap finalImage = null;
-
-            try
-            {
-                int width = 0;
-                int height = 0;
-
-                foreach (Bitmap bitmap in bitmaps)
-                {
-                    //update the size of the final bitmap
-                    width += bitmap.Width;
-                    height = bitmap.Height > height ? bitmap.Height : height;
-
-                    images.Add(bitmap);
-                }
-
-                //create a bitmap to hold the combined image
-                finalImage = new System.Drawing.Bitmap(width, height);
-
-                //get a graphics object from the image so we can draw on it
-                using (System.Drawing.Graphics g = System.Drawing.Graphics.FromImage(finalImage))
-                {
-                    //set background color
-                    //g.Clear(System.Drawing.Color.Black);
-
-                    //go through each image and draw it on the final image
-                    int offset = 0;
-                    foreach (System.Drawing.Bitmap image in images)
-                    {
-                        g.DrawImage(image,
-                          new System.Drawing.Rectangle(offset, 0, image.Width, image.Height));
-                        offset += image.Width;
-                    }
-                }
-
-                return finalImage;
-            }
-            catch (Exception ex)
-            {
-                if (finalImage != null)
-                    finalImage.Dispose();
-
-                throw ex;
-            }
-            finally
-            {
-                //clean up memory
-                foreach (System.Drawing.Bitmap image in images)
-                {
-                    image.Dispose();
-                }
-            }
-        }
-
-        private async Task<Language> GenerateLanguage(string localization, int minFont, int maxFont, char startChr, char endChr, FontFamily[] fontFamilies)
+        private async Task<Language> GenerateLanguage(
+            string localization,
+            int minFont,
+            int maxFont,
+            char startChr,
+            char endChr,
+            FontFamily[] fontFamilies)
         {
             List<char> chars = new List<char>();
             for (char c = startChr; c <= endChr; c++)
             {
                 chars.Add(c);
             }
-            
+
             return await _generator.GenerateLanguage(chars.ToArray(), minFont, maxFont, localization, fontFamilies);
         }
 
-        private static ImageSource IconToImageSource(Icon icon)
-        {
-            var imageSource = Imaging.CreateBitmapSourceFromHIcon(
-                icon.Handle,
-                Int32Rect.Empty,
-                BitmapSizeOptions.FromEmptyOptions());
-
-            return imageSource;
-        }
-
-        private int _genImageNumber = 0;
         private void GeneratorOnBitmapCreated(object sender, BitmapEventArgs args)
         {
             Application.Current.Dispatcher.Invoke(
@@ -424,17 +477,16 @@ namespace Qocr.Tester.Windows.ViewModels
                             if (!Directory.Exists(chrDir))
                             {
                                 Directory.CreateDirectory(chrDir);
-                                while (!Directory.Exists(chrDir));
+                                while (!Directory.Exists(chrDir))
+                                {
+                                    ;
+                                }
                             }
 
-                            var debugFileName =
-                                $"{fontName} {fontSize} {fontStyle}.png";
-                            bmp.Save(Path.Combine(chrDir, debugFileName), ImageFormat.Png);
+                            var debugFileName = $"{fontName} {fontSize} {fontStyle}.png";
+                            //bmp.Save(Path.Combine(chrDir, debugFileName), ImageFormat.Png);
 
-                            
-                                CurrentGenImage = BitmapUtils.SourceFromBitmap(bmp);
-                            
-                            
+                            CurrentGenImage = BitmapUtils.SourceFromBitmap(bmp);
 
                             _genImageNumber ++;
                             bmp.Dispose();
@@ -448,9 +500,7 @@ namespace Qocr.Tester.Windows.ViewModels
                             }
                             catch (Exception)
                             {
-                                
                             }
-                            
                         }
                     }));
         }

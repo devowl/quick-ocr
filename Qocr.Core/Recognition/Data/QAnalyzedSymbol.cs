@@ -1,11 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
-
-using Qocr.Core.Data.Map2D;
-using Qocr.Core.Interfaces;
 
 namespace Qocr.Core.Recognition.Data
 {
@@ -23,7 +19,7 @@ namespace Qocr.Core.Recognition.Data
         /// <summary>
         /// Создание экземпляра класса <see cref="QAnalyzedSymbol"/>.
         /// </summary>
-        public QAnalyzedSymbol(QSymbol sourceSymbol, IEnumerable<QChar> recognitionChars) 
+        public QAnalyzedSymbol(QSymbol sourceSymbol, IEnumerable<QChar> recognitionChars)
             : base(sourceSymbol.Monomap, sourceSymbol.StartPoint, sourceSymbol.Euler)
         {
             recognitionChars = recognitionChars ?? Enumerable.Empty<QChar>();
@@ -43,12 +39,16 @@ namespace Qocr.Core.Recognition.Data
             get
             {
                 var firstCharData = Chars.FirstOrDefault(chr => chr.State == QState.Ok) ??
-                                    Chars.OrderBy(chr => chr.Probability).FirstOrDefault();
+                                    Chars.Where(chr => chr.Popularity > 3)
+                                        .OrderByDescending(chr => chr.EulerRoundings)
+                                        .ThenByDescending(chr => chr.Popularity)
+                                        .ThenByDescending(chr => chr.EulerEquals)
+                                        .FirstOrDefault();
 
                 return firstCharData?.Char ?? Default;
             }
         }
-
+        
         /// <summary>
         /// Наилучший результат распознания.
         /// </summary>

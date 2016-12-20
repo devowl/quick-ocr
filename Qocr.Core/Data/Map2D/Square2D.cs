@@ -27,7 +27,7 @@ namespace Qocr.Core.Data.Map2D
             }
 
             SquareIdent = dots;
-            ClassUtils.FillClassProperiesValues(this, PropertyPrefix, dots.Select(item => item > '0').Cast<object>().ToArray());
+            ClassUtils.SetIndexValues(this, PropertyPrefix, dots.Select(chr => chr > '0').Cast<object>().ToArray());
         }
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace Qocr.Core.Data.Map2D
             }
 
             SquareIdent = string.Concat(dots.Select(item => item ? 1 : 0));
-            ClassUtils.FillClassProperiesValues(this, PropertyPrefix, dots);
+            ClassUtils.SetIndexValues(this, PropertyPrefix, dots);
         }
 
         /// <summary>

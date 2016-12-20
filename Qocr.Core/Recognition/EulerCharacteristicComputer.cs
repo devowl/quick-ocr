@@ -11,7 +11,7 @@ namespace Qocr.Core.Recognition
     /// <summary>
     /// Класс для вычисления Эйлеровой характеристики изображения.
     /// </summary>
-    internal static class EulerCharacteristicComputer
+    public static class EulerCharacteristicComputer
     {
         private static readonly Square2D[] EulerSquares2D = new[]
         {
