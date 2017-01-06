@@ -189,6 +189,7 @@ namespace Qocr.Core.Data.Map2D
         /// <inheritdoc/>
         public int SquareSize => 2;
 
+        /// <inheritdoc/>
         public override int GetHashCode()
         {
             if (!_hashCode.HasValue)

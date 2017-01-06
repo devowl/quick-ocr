@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Linq;
 
@@ -15,11 +16,11 @@ namespace Qocr.Core.Recognition.Logic
     /// </summary>
     public class DefaultFragmentAnalyzer : IFragmentAnalyzer
     {
-        private readonly EulerContainer _container;
-
         private readonly IEulerComparer _comparer;
         
         private readonly int _minimalHeight;
+
+        private readonly ReadOnlyCollection<Symbol> _knownSymbols;
 
         /// <summary>
         /// Создание экземпляра класса <see cref="DefaultFragmentAnalyzer"/>.
@@ -34,11 +35,13 @@ namespace Qocr.Core.Recognition.Logic
         /// </summary>
         public DefaultFragmentAnalyzer(EulerContainer container, IEulerComparer comparer)
         {
-            _container = container;
             _comparer = comparer;
             _minimalHeight =
-                _container.Languages.SelectMany(
+                container.Languages.SelectMany(
                     language => language.Chars.SelectMany(chr => chr.Codes.Select(code => code.Height))).Min();
+
+            var allSymbols = container.Languages.SelectMany(language => language.Chars).ToList();
+            _knownSymbols = new ReadOnlyCollection<Symbol>(allSymbols);
         }
 
         /// <inheritdoc/>
@@ -47,25 +50,20 @@ namespace Qocr.Core.Recognition.Logic
             /*
              * Поиск полного соответствия фрагмента символу базы знаний.
              */
-            // Идём по всем языкам.
-            foreach (var language in _container.Languages)
+            foreach (var possibleSymbol in _knownSymbols)
             {
-                // Идём по всем буквам языка
-                foreach (var possibleSymbol in language.Chars)
+                // Если данный символ присутствует в базе знаний
+                if (
+                    possibleSymbol.Codes.Where(code => code.Height == currentFragment.Monomap.Height)
+                        .Any(item => item.EulerCode.GetHashCode() == currentFragment.Euler.GetHashCode()))
                 {
-                    // Если данный символ присутствует в базе знаний
-                    if (
-                        possibleSymbol.Codes.Where(code => code.Height == currentFragment.Monomap.Height)
-                            .Any(item => item.EulerCode.GetHashCode() == currentFragment.Euler.GetHashCode()))
-                    {
-                        analyzedSymbol = new QAnalyzedSymbol(
-                            currentFragment,
-                            new[]
-                            {
-                                new QChar(possibleSymbol.Chr, QState.Ok)
-                            });
-                        return true;
-                    }
+                    analyzedSymbol = new QAnalyzedSymbol(
+                        currentFragment,
+                        new[]
+                        {
+                            new QChar(possibleSymbol.Chr, QState.Ok)
+                        });
+                    return true;
                 }
             }
 
@@ -106,9 +104,15 @@ namespace Qocr.Core.Recognition.Logic
             Point bottomRightPoint;
             if (currentLineRecognizedChars.Any())
             {
+                var lineChars = currentLineRecognizedChars.ToDictionary(
+                    symbol => symbol,
+                    symbol => symbol.StartPoint.Y + symbol.Height);
+
+                var lowestBound = lineChars.Values.Max();
+                var lowestSymbol = lineChars.First(symbol => symbol.Value == lowestBound);
+
                 // Минимальная нижняя точка для текущей линии для распознанных символов
-                var minLineY = currentFragment.StartPoint.Y +
-                           currentLineRecognizedChars.Min(symbol => symbol.StartPoint.Y + symbol.Height);
+                var minLineY = currentFragment.StartPoint.Y + lowestSymbol.Key.Height;
 
                 bottomRightPoint = new Point(
                     currentFragment.StartPoint.X + currentFragment.Width,
@@ -123,7 +127,7 @@ namespace Qocr.Core.Recognition.Logic
             }
 
             // Мерджим фрагменты которые лежат в прямоугольнике fragment.StartPoint > ! > bottomRightPoint
-            IEnumerable<QSymbol> mergedFragments = unknownFragments.Where(
+            QSymbol[] mergedFragments = unknownFragments.Where(
                 fragment => IsFragmentInsideSquare(fragment, currentFragment.StartPoint, bottomRightPoint))
                 .ToArray();
 
@@ -144,26 +148,22 @@ namespace Qocr.Core.Recognition.Logic
 
             // Результат анализа всех букв !!! 
             var resultData = new List<QChar>();
-
-            // Начинаем анализировать и искать похожие символы.
-            foreach (var language in _container.Languages)
+            
+            // Идём по всем буквам языка
+            foreach (var possibleSymbol in _knownSymbols)
             {
-                // Идём по всем буквам языка
-                foreach (var possibleSymbol in language.Chars)
+                QChar @char;
+                if (TryIntelliRecognition(
+                    possibleSymbol,
+                    currentEuler,
+                    bottomRightPoint.Y - currentFragment.StartPoint.Y,
+                    out @char) && @char.Popularity > _comparer.MinPopularity)
                 {
-                    QChar @char;
-                    if (TryIntelliRecognition(
-                        possibleSymbol,
-                        currentEuler,
-                        bottomRightPoint.Y - currentFragment.StartPoint.Y,
-                        out @char) && @char.Popularity > _comparer.MinPopularity)
-                    {
-                        // Не стоит пропускать проверку всех символов, так как стоит найти 3 и з цифро-буквы, либо аналоги А ру. и а англ.
-                        resultData.Add(@char);
-                    }
+                    // Не стоит пропускать проверку всех символов, так как стоит найти 3 и з цифро-буквы, либо аналоги А ру. и а англ.
+                    resultData.Add(@char);
                 }
             }
-
+            
             return new QAnalyzedSymbol(currentFragment, resultData);
         }
 

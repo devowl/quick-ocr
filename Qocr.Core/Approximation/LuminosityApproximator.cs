@@ -51,15 +51,27 @@ namespace Qocr.Core.Approximation
                 for (int y = 0; y < bitmap.Height; y++)
                 {
                     Color pixel = bitmap.GetPixel(x, y);
-
-                    var brightness = pixel.GetBrightness();
-                    brightness = brightness * Scale;
-
-                    booleanBitmap[x, y] = brightness < Brightness;
+                    booleanBitmap[x, y] = GetBrightness(pixel) < 130;
                 }
             }
 
             return new BitMonomap(booleanBitmap);
         }
+
+        private int GetBrightness(Color c)
+        {
+            return (int)Math.Sqrt(
+            c.R * c.R * .241 +
+            c.G * c.G * .691 +
+            c.B * c.B * .068);
+        }
+
+        //private int GetBrightness(Color c)
+        //{
+        //    return (int)Math.Sqrt(
+        //    c.R * c.R * .299 +
+        //    c.G * c.G * .587 +
+        //    c.B * c.B * .114);
+        //}
     }
 }

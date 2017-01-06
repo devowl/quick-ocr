@@ -40,17 +40,34 @@ namespace Qocr.Generator
             using (Bitmap bitmap = new Bitmap((int)font.Size + ImageBound * 2, (int)font.Size + ImageBound * 2))
             using (Graphics graphics = Graphics.FromImage(bitmap))
             {
+                /*
                 graphics.Clear(Color.White);
                 graphics.SmoothingMode = SmoothingMode.HighQuality;
                 graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
-                //graphics.PixelOffsetMode = PixelOffsetMode.Default;
-                //graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.SingleBitPerPixelGridFit;
-                graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+                graphics.PixelOffsetMode = PixelOffsetMode.Default;
+                graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.SingleBitPerPixelGridFit;
+                graphics.DrawString(chr.ToString(), font, Brushes.Black, ImageBound, ImageBound);
+                graphics.Flush();
+                */
+
+                graphics.Clear(Color.White);
+                graphics.SmoothingMode = SmoothingMode.Default;
+                graphics.InterpolationMode = InterpolationMode.Default;
+                graphics.PixelOffsetMode = PixelOffsetMode.Default;
+                graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.SystemDefault;
                 graphics.DrawString(chr.ToString(), font, Brushes.Black, ImageBound, ImageBound);
                 graphics.Flush();
 
-                bitmap.Save("1.png", ImageFormat.Png);
+                try
+                {
+                    DefaultApproximator.Approximate(bitmap).ToBitmap().Save("GenenratorCurrentPic.png", ImageFormat.Png);
+                    //bitmap.Save("GenenratorCurrentPic.png", ImageFormat.Png);
 
+                }
+                catch
+                {
+                    
+                }
                 return DefaultApproximator.Approximate(bitmap);
             }
         }

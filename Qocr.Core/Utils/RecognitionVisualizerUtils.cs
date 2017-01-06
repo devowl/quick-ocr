@@ -13,27 +13,34 @@ namespace Qocr.Core.Utils
     /// </summary>
     public static class RecognitionVisualizerUtils
     {
-        private static readonly Pen RectanglePen = new Pen(Color.Coral, 1);
+        private const float Thickness = 1;
+
+        private static readonly Pen KnownPen = new Pen(Color.LimeGreen, Thickness);
+
+        private static readonly Pen AssumptionPen = new Pen(Color.Orange, Thickness);
+
+        private static readonly Pen UnknownPen = new Pen(Color.Red, Thickness);
+
+        private static readonly IDictionary<QState, Pen> DefaultMapping = new Dictionary<QState, Pen>
+        {
+            { QState.Ok, KnownPen },
+            { QState.Assumptions, AssumptionPen },
+            { QState.Unknown, UnknownPen }
+        };
 
         /// <summary>
         /// Визуализировать результат распознания на <see cref="Bitmap"/>.
         /// </summary>
-        /// <param name="bitmap"></param>
-        /// <param name="report"></param>
-        /// <returns></returns>
+        /// <param name="bitmap">Ссылка на <see cref="Bitmap"/>.</param>
+        /// <param name="report">Ссылка на результат распознавания.</param>
         public static void Visualize(Bitmap bitmap, QReport report)
         {
-            var thickness = RectanglePen.Width;
+            var thickness = Thickness;
             foreach (var symbol in report.Symbols)
             {
-                if (symbol.State == QState.Unknown)
-                {
-                    continue;
-                }
-                
                 using (Graphics g = Graphics.FromImage(bitmap))
                 {
-                    g.DrawRectangle(RectanglePen, symbol.StartPoint.X - thickness, symbol.StartPoint.Y - thickness, symbol.Width + thickness, symbol.Height + thickness);   
+                    g.DrawRectangle(DefaultMapping[symbol.State], symbol.StartPoint.X - thickness, symbol.StartPoint.Y - thickness, symbol.Width + thickness, symbol.Height + thickness);   
                 }
             }
         }

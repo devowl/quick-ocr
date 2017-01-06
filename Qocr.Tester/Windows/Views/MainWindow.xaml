@@ -23,12 +23,7 @@
     <DockPanel>
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
             <Button Content="Gen" Command="{Binding GenCommand}" />
-            <Label Content="FileName: Gen.bin" />
-            <TextBlock>Шрифт:<Run Text="{Binding CurrentFont.FontFamily.Name, Mode=OneWay}" /></TextBlock>
-            <TextBlock>Размер:<Run Text="{Binding CurrentFont.Size, Mode=OneWay}" /></TextBlock>
-            <TextBlock>Стиль:<Run Text="{Binding CurrentFont.Style, Mode=OneWay}" /></TextBlock>
             
-            <Button Command="{Binding TestCommand}" Margin="50,0,0,0" Content="Test" />
         </StackPanel>
         <Image DockPanel.Dock="Top" Source="{Binding CurrentGenImage}" SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="HighQuality" />
         <Grid>
